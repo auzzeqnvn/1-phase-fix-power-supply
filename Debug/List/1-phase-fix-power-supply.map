@@ -20,6 +20,7 @@ Variable                                                                        
 Uc_Buff_count                                                                     R4           1
 Uc_Loop_count                                                                     R3           1
 Bit_sample_full                                                                   GPIOR0.0  1bit
+Bit_warning                                                                       GPIOR0.1  1bit
 
 FLASH Allocation [words]
 Function                                                                          Address   Size
@@ -27,11 +28,13 @@ Function                                                                        
 ext_int0_isr                                                                      0x0004F      1
 ext_int1_isr                                                                      0x00050      1
 timer1_ovf_isr                                                                    0x00051     30
-main                                                                              0x0006F    160
-SPI_7753_SEND                                                                     0x0010F     20
-SPI_7753_RECEIVE                                                                  0x00123     16
-ADE7753_READ                                                                      0x00133    101
-SEND_DATA_LED                                                                     0x00198     41
-SELECT_LED                                                                        0x001C1    149
-SCAN_LED                                                                          0x00256     91
-SPI_SENDBYTE                                                                      0x002B1     27
+timer2_ovf_isr                                                                    0x0006F     11
+read_adc                                                                          0x0007A     27
+main                                                                              0x00095    242
+SPI_7753_SEND                                                                     0x00187     20
+SPI_7753_RECEIVE                                                                  0x0019B     16
+ADE7753_READ                                                                      0x001AB    109
+SEND_DATA_LED                                                                     0x00218     41
+SELECT_LED                                                                        0x00241    149
+SCAN_LED                                                                          0x002D6     91
+SPI_SENDBYTE                                                                      0x00331     27

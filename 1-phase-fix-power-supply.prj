@@ -7,7 +7,7 @@ A=
 C=
 D=11/19/2018
 Files=4
-OpenedFiles=2
+OpenedFiles=0
 OF1=main.c
 Active1=0
 DebugOutputListFilesDirectory=Debug\List
@@ -22,7 +22,7 @@ AllowDisplayFunctionCallTree=1
 CleanUp=2
 EditorPanelMode=0
 ActiveEditorPanel=0
-Active0=0
+Active0=1
 EditorPanel0=0
 PageIndex0=0
 F1=main.c
@@ -135,8 +135,8 @@ WatchAVR8LAutoVariables=0
 UseEEPROMLocation0=1
 RebuildAll=0
 LinkageInformationPresent=1
-COFFileTimeStamp=1299479689
-Build=42
+COFFileTimeStamp=1299482057
+Build=104
 [DefinedSymbolsDebug]
 Count=0
 [Compiler]
@@ -238,7 +238,7 @@ UseEEPROMLocation0=1
 RebuildAll=1
 LinkageInformationPresent=0
 COFFileTimeStamp=-1
-Build=42
+Build=104
 IncludePath0=
 IncludePath1=
 IncludePath2=
@@ -486,10 +486,10 @@ L12=Enhanced function parameters passing: Yes
 L13=Automatic register allocation: Yes
 L14=Smart register allocation: Yes
 L15=
-L16=Build: 42
-L17=1367 line(s) compiled
+L16=Build: 103
+L17=1440 line(s) compiled
 L18=No errors
-L19=3 warning(s)
+L19=2 warning(s)
 L20=
 L21=Bit variables area: 0x2 to 0x2
 L22=Bit variables size: 1 byte(s)
@@ -508,19 +508,19 @@ L34=Heap size: 0 byte(s)
 Lines=38
 L35=
 L36=EEPROM usage: 0 byte(s), 0,0% of EEPROM
-L37=Program size: 988 words (1976 bytes), 48,2% of FLASH
-L38=128 words (256 bytes), 11,5% reduced by Code Compression
+L37=Program size: 1170 words (2340 bytes), 57,1% of FLASH
+L38=147 words (294 bytes), 11,2% reduced by Code Compression
 [BuildInfoAssembler]
 Lines=12
 L1=AVRASM: AVR macro assembler 2.1.30 (build 592 Nov  7 2008 12:38:17)
 L2=Copyright (C) 1995-2008 ATMEL Corporation
 L3=
-L4=D:\Mydata\Work\Tan Phat\Bien doi nguon 3 phase\Firmware_2\1-phase-fix-power-supply\Debug\List\1-phase-fix-power-supply.asm(2971): No EEPROM data, deleting D:\Mydata\Work\Tan Phat\Bien doi nguon 3 phase\Firmware_2\1-phase-fix-power-supply\Debug\Exe\1-phase-fix-power-supply.eep
+L4=D:\Mydata\Work\Tan Phat\Bien doi nguon 3 phase\Firmware_2\1-phase-fix-power-supply\Debug\List\1-phase-fix-power-supply.asm(3213): No EEPROM data, deleting D:\Mydata\Work\Tan Phat\Bien doi nguon 3 phase\Firmware_2\1-phase-fix-power-supply\Debug\Exe\1-phase-fix-power-supply.eep
 L5=
 L6=ATmega48 memory use summary [bytes]:
 L7=Segment   Begin    End      Code   Data   Used    Size   Use%
 L8=---------------------------------------------------------------
-L9=[.cseg] 0x000000 0x0007b8   1958     18   1976    4096  48.2%
+L9=[.cseg] 0x000000 0x000924   2322     18   2340    4096  57.1%
 L10=[.dseg] 0x000100 0x0001b4      0     52     52     512  10.2%
 L11=[.eseg] 0x000000 0x000000      0      0      0     256   0.0%
 L12=
@@ -533,11 +533,11 @@ F4=spi.c
 F5=ADE7753.c
 F6=ADE7753.h
 [Bookmarks1]
-TimeStamp=1299468301
-Row=0
+TimeStamp=1299480107
+Row=249
 Column=0
 ScrollPosX=0
-ScrollPosY=199
+ScrollPosY=210
 BK0=-1
 BK1=-1
 BK2=-1
@@ -645,7 +645,7 @@ Row=0
 Column=0
 ScrollPosX=0
 ScrollPosY=0
-TimeStamp=1299471002
+TimeStamp=1299482874
 [FoldedCode2]
 Blocks=0
 [Bookmarks6]
@@ -666,17 +666,10 @@ BK8=-1
 BK9=-1
 [FoldedCode6]
 Blocks=0
-[FoldedCode1]
-Blocks=0
 [FoldedCode5]
 Blocks=0
-[Header6]
-Files=5
-F1=ADE7753.h
-F2=C:\cvavr\inc\mega48.h
-F3=C:\cvavr\inc\mega168_bits.h
-F4=C:\cvavr\inc\delay.h
-F5=scan_led.h
+[FoldedCode1]
+Blocks=0
 [Header8]
 Files=4
 F1=scan_led.h
@@ -688,6 +681,13 @@ Files=3
 F1=SPI_SOFTWARE.h
 F2=C:\cvavr\inc\mega48.h
 F3=C:\cvavr\inc\mega168_bits.h
+[Header6]
+Files=5
+F1=ADE7753.h
+F2=C:\cvavr\inc\mega48.h
+F3=C:\cvavr\inc\mega168_bits.h
+F4=C:\cvavr\inc\delay.h
+F5=scan_led.h
 [Header5]
 Files=5
 F1=C:\cvavr\inc\mega48.h

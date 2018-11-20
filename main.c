@@ -27,10 +27,15 @@ Data Stack size         : 128
 
 // Declare your global variables here
 
+
+#define TIMER2_OFF  TIMSK2=(0<<OCIE2B) | (0<<OCIE2A) | (0<<TOIE2)
+#define TIMER2_ON   TIMSK2=(0<<OCIE2B) | (0<<OCIE2A) | (1<<TOIE2)
+
 #define BUZZER  PORTD.5
 #define BUZZER_OFF  BUZZER = 0
 #define BUZZER_ON   BUZZER = 1
 
+#define CURRENT_SET_MIN 8
 
 unsigned int    AI10_Voltage_buff[10];
 unsigned int    AI10_Currrent_buff[10];
@@ -38,6 +43,7 @@ unsigned long   Ulong_tmp;
 unsigned char   Uc_Buff_count = 0;
 unsigned char   Uc_Loop_count;
 bit Bit_sample_full = 0;
+bit Bit_warning = 0;
 // External Interrupt 0 service routine
 interrupt [EXT_INT0] void ext_int0_isr(void)
 {
@@ -62,6 +68,17 @@ interrupt [TIM1_OVF] void timer1_ovf_isr(void)
     SCAN_LED();
 }
 
+
+// Timer2 overflow interrupt service routine
+interrupt [TIM2_OVF] void timer2_ovf_isr(void)
+{
+// Reinitialize Timer2 value
+    TCNT2=0xD0;
+    if(BUZZER == 0)   BUZZER_ON;
+    else    BUZZER_OFF;
+// Place your code here
+
+}
 // Voltage Reference: AREF pin
 #define ADC_VREF_TYPE ((0<<REFS1) | (0<<REFS0) | (0<<ADLAR))
 
@@ -152,10 +169,24 @@ OCR1BL=0x00;
 // Mode: Normal top=0xFF
 // OC2A output: Disconnected
 // OC2B output: Disconnected
+// ASSR=(0<<EXCLK) | (0<<AS2);
+// TCCR2A=(0<<COM2A1) | (0<<COM2A0) | (0<<COM2B1) | (0<<COM2B0) | (0<<WGM21) | (0<<WGM20);
+// TCCR2B=(0<<WGM22) | (0<<CS22) | (0<<CS21) | (0<<CS20);
+// TCNT2=0x00;
+// OCR2A=0x00;
+// OCR2B=0x00;
+
+// Timer/Counter 2 initialization
+// Clock source: System Clock
+// Clock value: 250,000 kHz
+// Mode: Normal top=0xFF
+// OC2A output: Disconnected
+// OC2B output: Disconnected
+// Timer Period: 0,5 ms
 ASSR=(0<<EXCLK) | (0<<AS2);
 TCCR2A=(0<<COM2A1) | (0<<COM2A0) | (0<<COM2B1) | (0<<COM2B0) | (0<<WGM21) | (0<<WGM20);
-TCCR2B=(0<<WGM22) | (0<<CS22) | (0<<CS21) | (0<<CS20);
-TCNT2=0x00;
+TCCR2B=(0<<WGM22) | (0<<CS22) | (1<<CS21) | (1<<CS20);
+TCNT2=0x83;
 OCR2A=0x00;
 OCR2B=0x00;
 
@@ -165,8 +196,10 @@ TIMSK0=(0<<OCIE0B) | (0<<OCIE0A) | (0<<TOIE0);
 // Timer/Counter 1 Interrupt(s) initialization
 TIMSK1=(0<<ICIE1) | (0<<OCIE1B) | (0<<OCIE1A) | (1<<TOIE1);
 
+
 // Timer/Counter 2 Interrupt(s) initialization
-TIMSK2=(0<<OCIE2B) | (0<<OCIE2A) | (0<<TOIE2);
+// TIMSK2=(0<<OCIE2B) | (0<<OCIE2A) | (0<<TOIE2);
+TIMSK2=(0<<OCIE2B) | (0<<OCIE2A) | (1<<TOIE2);
 
 // External Interrupt(s) initialization
 // INT0: On
@@ -207,6 +240,17 @@ DIDR1=(0<<AIN0D) | (0<<AIN1D);
 // ADCSRA=(1<<ADEN) | (0<<ADSC) | (0<<ADATE) | (0<<ADIF) | (0<<ADIE) | (0<<ADPS2) | (1<<ADPS1) | (1<<ADPS0);
 // ADCSRB=(0<<ADTS2) | (0<<ADTS1) | (0<<ADTS0);
 
+// ADC initialization
+// ADC Clock frequency: 1000,000 kHz
+// ADC Voltage Reference: AREF pin
+// ADC Auto Trigger Source: ADC Stopped
+// Digital input buffers on ADC0: On, ADC1: On, ADC2: On, ADC3: On
+// ADC4: On, ADC5: On
+DIDR0=(0<<ADC5D) | (0<<ADC4D) | (0<<ADC3D) | (0<<ADC2D) | (0<<ADC1D) | (0<<ADC0D);
+ADMUX=ADC_VREF_TYPE;
+ADCSRA=(1<<ADEN) | (0<<ADSC) | (0<<ADATE) | (0<<ADIF) | (0<<ADIE) | (0<<ADPS2) | (1<<ADPS1) | (1<<ADPS0);
+ADCSRB=(0<<ADTS2) | (0<<ADTS1) | (0<<ADTS0);
+
 // SPI initialization
 // SPI disabled
 SPCR=(0<<SPIE) | (0<<SPE) | (0<<DORD) | (0<<MSTR) | (0<<CPOL) | (0<<CPHA) | (0<<SPR1) | (0<<SPR0);
@@ -219,12 +263,19 @@ TWCR=(0<<TWEA) | (0<<TWSTA) | (0<<TWSTO) | (0<<TWEN) | (0<<TWIE);
 #asm("sei")
 Uint_data_led1 = 0;
 Uint_data_led2 = 0;
-BUZZER_ON;
-delay_ms(100);
-BUZZER_OFF;
+
+TIMER2_ON;
+delay_ms(200);
+TIMER2_OFF;
+delay_ms(200);
+TIMER2_ON;
+delay_ms(200);
+TIMER2_OFF;
+
 while (1)
       {
       // Place your code here
+        /* Ghi nhan gia tri dong dien va dien ap vao buffer */
         AI10_Voltage_buff[Uc_Buff_count] = ADE7753_READ(1,VRMS);
         AI10_Currrent_buff[Uc_Buff_count] = ADE7753_READ(1,IRMS);
         Uc_Buff_count++;
@@ -233,10 +284,11 @@ while (1)
             Uc_Buff_count = 0;
             if(Bit_sample_full == 0)
             {
+                /* Xac nhan buffer da day */
                 Bit_sample_full = 1;
-                BUZZER_ON;
-                delay_ms(100);
-                BUZZER_OFF;
+                TIMER2_ON;
+                delay_ms(200);
+                TIMER2_OFF;
             }
         }
         if(Bit_sample_full)
@@ -248,6 +300,7 @@ while (1)
             }
             Ulong_tmp /= 10;
             Uint_data_led1 = (unsigned int) Ulong_tmp;
+
             Ulong_tmp = 0;
             for(Uc_Loop_count = 0; Uc_Loop_count<10;Uc_Loop_count++)
             {
@@ -255,7 +308,27 @@ while (1)
             }
             Ulong_tmp /= 10;
             Uint_data_led2 = (unsigned int) Ulong_tmp;
+
+            /* 
+            *   Doc Current_Set
+            *   So sanh va dua ra canh bao
+            */
+            Ulong_tmp = read_adc(1);
+            Ulong_tmp = Ulong_tmp*CURRENT_SET_MIN*10/1023 + CURRENT_SET_MIN*10;
+            //Uint_data_led2 = Ulong_tmp;
+            if(Ulong_tmp < Uint_data_led2)  
+            {
+                Bit_warning = 1;
+            }
+            else    Bit_warning = 0;
         }
-        delay_ms(500);
+        if(Bit_warning)
+        {
+            TIMER2_ON;
+            delay_ms(100);
+            TIMER2_OFF;
+            delay_ms(100);
+        }
+        else    delay_ms(500);
       }
 }

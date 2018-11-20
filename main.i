@@ -82,6 +82,7 @@ unsigned long   Ulong_tmp;
 unsigned char   Uc_Buff_count = 0;
 unsigned char   Uc_Loop_count;
 bit Bit_sample_full = 0;
+bit Bit_warning = 0;
 
 interrupt [2] void ext_int0_isr(void)
 {
@@ -100,6 +101,15 @@ interrupt [14] void timer1_ovf_isr(void)
 (*(unsigned char *) 0x84)=0xA000 & 0xff;
 
 SCAN_LED();
+}
+
+interrupt [10] void timer2_ovf_isr(void)
+{
+
+(*(unsigned char *) 0xb2)=0xD0;
+if(PORTD.5 == 0)   PORTD.5 = 1;
+else    PORTD.5 = 0;
+
 }
 
 unsigned int read_adc(unsigned char adc_input)
@@ -154,8 +164,8 @@ OCR0B=0x00;
 
 (*(unsigned char *) 0xb6)=(0<<6       ) | (0<<5       );
 (*(unsigned char *) 0xb0)=(0<<7       ) | (0<<6       ) | (0<<5       ) | (0<<4       ) | (0<<1       ) | (0<<0       );
-(*(unsigned char *) 0xb1)=(0<<3       ) | (0<<2       ) | (0<<1       ) | (0<<0       );
-(*(unsigned char *) 0xb2)=0x00;
+(*(unsigned char *) 0xb1)=(0<<3       ) | (0<<2       ) | (1<<1       ) | (1<<0       );
+(*(unsigned char *) 0xb2)=0x83;
 (*(unsigned char *) 0xb3)=0x00;
 (*(unsigned char *) 0xb4)=0x00;
 
@@ -163,13 +173,18 @@ OCR0B=0x00;
 
 (*(unsigned char *) 0x6f)=(0<<5       ) | (0<<2       ) | (0<<1       ) | (1<<0       );
 
-(*(unsigned char *) 0x70)=(0<<2       ) | (0<<1       ) | (0<<0       );
+(*(unsigned char *) 0x70)=(0<<2       ) | (0<<1       ) | (1<<0       );
 
 (*(unsigned char *) 0xc1)=(0<<7       ) | (0<<6       ) | (0<<5       ) | (0<<4       ) | (0<<3       ) | (0<<2       ) | (0<<1       ) | (0<<0       );
 
 ACSR=(1<<7       ) | (0<<6       ) | (0<<5       ) | (0<<4       ) | (0<<3       ) | (0<<2       ) | (0<<1       ) | (0<<0       );
 
 (*(unsigned char *) 0x7f)=(0<<0       ) | (0<<1       );
+
+(*(unsigned char *) 0x7e)=(0<<5       ) | (0<<4       ) | (0<<3       ) | (0<<2       ) | (0<<1       ) | (0<<0       );
+(*(unsigned char *) 0x7c)=((0<<7       ) | (0<<6       ) | (0<<5       ));
+(*(unsigned char *) 0x7a)=(1<<7       ) | (0<<6       ) | (0<<5       ) | (0<<4       ) | (0<<3       ) | (0<<2       ) | (1<<1       ) | (1<<0       );
+(*(unsigned char *) 0x7b)=(0<<2       ) | (0<<1       ) | (0<<0       );
 
 SPCR=(0<<7       ) | (0<<6       ) | (0<<5       ) | (0<<4       ) | (0<<3       ) | (0<<2       ) | (0<<1       ) | (0<<0       );
 
@@ -178,9 +193,15 @@ SPCR=(0<<7       ) | (0<<6       ) | (0<<5       ) | (0<<4       ) | (0<<3      
 #asm("sei")
 Uint_data_led1 = 0;
 Uint_data_led2 = 0;
-PORTD.5 = 1;
-delay_ms(100);
-PORTD.5 = 0;
+
+(*(unsigned char *) 0x70)=(0<<2       ) | (0<<1       ) | (1<<0       );
+delay_ms(200);
+(*(unsigned char *) 0x70)=(0<<2       ) | (0<<1       ) | (0<<0       );
+delay_ms(200);
+(*(unsigned char *) 0x70)=(0<<2       ) | (0<<1       ) | (1<<0       );
+delay_ms(200);
+(*(unsigned char *) 0x70)=(0<<2       ) | (0<<1       ) | (0<<0       );
+
 while (1)
 {
 
@@ -192,10 +213,11 @@ if(Uc_Buff_count > 9)
 Uc_Buff_count = 0;
 if(Bit_sample_full == 0)
 {
+
 Bit_sample_full = 1;
-PORTD.5 = 1;
-delay_ms(100);
-PORTD.5 = 0;
+(*(unsigned char *) 0x70)=(0<<2       ) | (0<<1       ) | (1<<0       );
+delay_ms(200);
+(*(unsigned char *) 0x70)=(0<<2       ) | (0<<1       ) | (0<<0       );
 }
 }
 if(Bit_sample_full)
@@ -207,6 +229,7 @@ Ulong_tmp += AI10_Voltage_buff[Uc_Loop_count];
 }
 Ulong_tmp /= 10;
 Uint_data_led1 = (unsigned int) Ulong_tmp;
+
 Ulong_tmp = 0;
 for(Uc_Loop_count = 0; Uc_Loop_count<10;Uc_Loop_count++)
 {
@@ -214,7 +237,23 @@ Ulong_tmp += AI10_Currrent_buff[Uc_Loop_count];
 }
 Ulong_tmp /= 10;
 Uint_data_led2 = (unsigned int) Ulong_tmp;
+
+Ulong_tmp = read_adc(1);
+Ulong_tmp = Ulong_tmp*8*10/1023 + 8*10;
+
+if(Ulong_tmp < Uint_data_led2)  
+{
+Bit_warning = 1;
 }
-delay_ms(500);
+else    Bit_warning = 0;
+}
+if(Bit_warning)
+{
+(*(unsigned char *) 0x70)=(0<<2       ) | (0<<1       ) | (1<<0       );
+delay_ms(100);
+(*(unsigned char *) 0x70)=(0<<2       ) | (0<<1       ) | (0<<0       );
+delay_ms(100);
+}
+else    delay_ms(500);
 }
 }
