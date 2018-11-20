@@ -202,7 +202,7 @@ for(i=0;i<num_data;i++)
 res <<= 8;
 res += data[i];
 }
-if(addr == 0x16)    return  (res/3600);
+if(addr == 0x16)    return  (res/360);
 if(addr == 0x17)    return  (res/2800);
 return (data[2] + data[1] + data[0]);
 }

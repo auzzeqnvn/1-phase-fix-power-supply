@@ -135,8 +135,8 @@ WatchAVR8LAutoVariables=0
 UseEEPROMLocation0=1
 RebuildAll=0
 LinkageInformationPresent=1
-COFFileTimeStamp=1299482057
-Build=104
+COFFileTimeStamp=1299485320
+Build=110
 [DefinedSymbolsDebug]
 Count=0
 [Compiler]
@@ -238,7 +238,7 @@ UseEEPROMLocation0=1
 RebuildAll=1
 LinkageInformationPresent=0
 COFFileTimeStamp=-1
-Build=104
+Build=110
 IncludePath0=
 IncludePath1=
 IncludePath2=
@@ -486,8 +486,8 @@ L12=Enhanced function parameters passing: Yes
 L13=Automatic register allocation: Yes
 L14=Smart register allocation: Yes
 L15=
-L16=Build: 103
-L17=1440 line(s) compiled
+L16=Build: 109
+L17=1441 line(s) compiled
 L18=No errors
 L19=2 warning(s)
 L20=
@@ -508,7 +508,7 @@ L34=Heap size: 0 byte(s)
 Lines=38
 L35=
 L36=EEPROM usage: 0 byte(s), 0,0% of EEPROM
-L37=Program size: 1170 words (2340 bytes), 57,1% of FLASH
+L37=Program size: 1169 words (2338 bytes), 57,1% of FLASH
 L38=147 words (294 bytes), 11,2% reduced by Code Compression
 [BuildInfoAssembler]
 Lines=12
@@ -520,7 +520,7 @@ L5=
 L6=ATmega48 memory use summary [bytes]:
 L7=Segment   Begin    End      Code   Data   Used    Size   Use%
 L8=---------------------------------------------------------------
-L9=[.cseg] 0x000000 0x000924   2322     18   2340    4096  57.1%
+L9=[.cseg] 0x000000 0x000922   2320     18   2338    4096  57.1%
 L10=[.dseg] 0x000100 0x0001b4      0     52     52     512  10.2%
 L11=[.eseg] 0x000000 0x000000      0      0      0     256   0.0%
 L12=
@@ -645,7 +645,7 @@ Row=0
 Column=0
 ScrollPosX=0
 ScrollPosY=0
-TimeStamp=1299482874
+TimeStamp=1299485858
 [FoldedCode2]
 Blocks=0
 [Bookmarks6]

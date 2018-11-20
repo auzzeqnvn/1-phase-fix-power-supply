@@ -458,7 +458,7 @@
 ;PCODE: $00000127 VOL: 0
 ;PCODE: $00000128 VOL: 0
 ;PCODE: $00000129 VOL: 0
-; 0001 0084     if(addr == 0x16)    return  (res/3600);
+; 0001 0084     if(addr == 0x16)    return  (res/360);
 ;PCODE: $0000012A VOL: 0
 ;PCODE: $0000012B VOL: 0
 ;PCODE: $0000012C VOL: 0

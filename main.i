@@ -239,7 +239,7 @@ Ulong_tmp /= 10;
 Uint_data_led2 = (unsigned int) Ulong_tmp;
 
 Ulong_tmp = read_adc(1);
-Ulong_tmp = Ulong_tmp*8*10/1023 + 8*10;
+Ulong_tmp = Ulong_tmp*(20-7)*100/1023 + 7*100;
 
 if(Ulong_tmp < Uint_data_led2)  
 {
@@ -254,6 +254,6 @@ delay_ms(100);
 (*(unsigned char *) 0x70)=(0<<2       ) | (0<<1       ) | (0<<0       );
 delay_ms(100);
 }
-else    delay_ms(500);
+else    delay_ms(200);
 }
 }

@@ -35,7 +35,8 @@ Data Stack size         : 128
 #define BUZZER_OFF  BUZZER = 0
 #define BUZZER_ON   BUZZER = 1
 
-#define CURRENT_SET_MIN 8
+#define CURRENT_SET_MIN 7
+#define CURRENT_SET_MAX 20
 
 unsigned int    AI10_Voltage_buff[10];
 unsigned int    AI10_Currrent_buff[10];
@@ -314,8 +315,8 @@ while (1)
             *   So sanh va dua ra canh bao
             */
             Ulong_tmp = read_adc(1);
-            Ulong_tmp = Ulong_tmp*CURRENT_SET_MIN*10/1023 + CURRENT_SET_MIN*10;
-            //Uint_data_led2 = Ulong_tmp;
+            Ulong_tmp = Ulong_tmp*(CURRENT_SET_MAX-CURRENT_SET_MIN)*100/1023 + CURRENT_SET_MIN*100;
+            //Uint_data_led1 = Ulong_tmp;
             if(Ulong_tmp < Uint_data_led2)  
             {
                 Bit_warning = 1;
@@ -329,6 +330,6 @@ while (1)
             TIMER2_OFF;
             delay_ms(100);
         }
-        else    delay_ms(500);
+        else    delay_ms(200);
       }
 }
