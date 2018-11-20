@@ -1,5 +1,6 @@
 #include "ADE7753.h"
 #include "delay.h"
+#include "scan_led.h"
 
 
 void    SPI_7753_SEND(unsigned char data)
@@ -29,11 +30,13 @@ unsigned char    SPI_7753_RECEIVE(void)
     {
         SPI_SCK_HIGHT;
         delay_us(50);
-        SPI_SCK_LOW;        
-        if(SPI_MISO_HIGHT)   data += 1;
-        delay_us(50);
-        data <<= 1;     
-        
+        if(SPI_MISO_HIGHT)   
+        {
+            data += 1;
+        }
+        data <<= 1;   
+        SPI_SCK_LOW; 
+        delay_us(50); 
     }
     return data;
 }
@@ -126,9 +129,9 @@ unsigned int    ADE7753_READ(unsigned char IC_CS,unsigned char addr,unsigned cha
         res <<= 8;
         res += data[i];
     }
-    if(addr == 0x16)    return (res/3600);
-    if(addr == 0x17)    return  (res/500);
-    return data[0]+data[1] + data[2];
+    if(addr == 0x16)    return  (res/3600);
+    if(addr == 0x17)    return  (res/2800);
+    //return (data[2] + data[1] + data[0]);
 }
 
 void    ADE7753_INIT(void)

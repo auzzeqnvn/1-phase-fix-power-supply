@@ -1,4 +1,4 @@
-#include "mega8.h"
+#include "mega48.h"
 
 #define DO_SPI_MOSI PORTB.3
 #define DO_SPI_SCK  PORTB.5

@@ -1,11 +1,11 @@
 [CodeWizard]
 Toolset=AVR
 [Chip]
-Type=ATmega48
+Type=ATmega8L
 CPUClock=8
 XTALDivEnabled=0
 XTALDivValue=2
-XTALDivIndex=0
+XTALDivIndex=-1
 MainClockSourceIndex=0
 OutputSystemClock=0
 ResetAfterBtnActivation=0
@@ -32,7 +32,7 @@ DDR1=42
 PORT1=0
 DDR2=52
 PORT2=0
-DDR3=0
+DDR3=32
 PORT3=0
 DDR4=0
 PORT4=0
@@ -338,7 +338,7 @@ LastInput=0
 ADCAutoTriggerSource=0
 StartupTime=-1
 TrackAndHoldTime=-1
-DIDR0=61
+DIDR0=0
 DIDR2=0
 DIDR3=0
 DIDR4=0

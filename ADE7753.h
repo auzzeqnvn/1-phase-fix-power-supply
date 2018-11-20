@@ -1,4 +1,4 @@
-#include "mega8.h"
+#include "mega48.h"
 
 #define DOUT_MOSI_SPI_7753_MCU   PORTC.2
 #define DIN_MISO_SPI_7753_MCU    PINC.3
@@ -12,7 +12,7 @@
 #define SPI_SCK_LOW   DOUT_CLK_SPI_7753_MCU = 0
 
 #define SPI_MOSI_HIGHT  DOUT_MOSI_SPI_7753_MCU = 1
-#define SPI_MOSI_LOW  DOUT_MOSI_SPI_7753_MCU = 1
+#define SPI_MOSI_LOW  DOUT_MOSI_SPI_7753_MCU = 0
 
 #define SPI_MISO_HIGHT  DIN_MISO_SPI_7753_MCU == 1
 #define SPI_MISO_LOW  DIN_MISO_SPI_7753_MCU == 0

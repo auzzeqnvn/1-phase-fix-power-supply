@@ -2,7 +2,7 @@
 This program was created by the
 CodeWizardAVR V3.12 Advanced
 Automatic Program Generator
-© Copyright 1998-2014 Pavel Haiduc, HP InfoTech s.r.l.
+ï¿½ Copyright 1998-2014 Pavel Haiduc, HP InfoTech s.r.l.
 http://www.hpinfotech.com
 
 Project : 1 Phase fix power supply
@@ -22,10 +22,16 @@ Data Stack size         : 256
 *******************************************************/
 
 #include <mega8.h>
-
+#include "ADE7753.h"
+#include "scan_led.h"
 #include <delay.h>
 
+#define BUZZER  PORTD.5
+#define BUZZER_ON   BUZZER = 1
+#define BUZZER_OFF  BUZZER = 0
+
 // Declare your global variables here
+
 
 // External Interrupt 0 service routine
 interrupt [EXT_INT0] void ext_int0_isr(void)
@@ -44,12 +50,14 @@ interrupt [EXT_INT1] void ext_int1_isr(void)
 // Timer1 overflow interrupt service routine
 interrupt [TIM1_OVF] void timer1_ovf_isr(void)
 {
-// Reinitialize Timer1 value
-TCNT1H=0x8300 >> 8;
-TCNT1L=0x8300 & 0xff;
-// Place your code here
-
+    // Reinitialize Timer1 value
+    TCNT1H=0x8300 >> 8;
+    TCNT1L=0x8300 & 0xff;
+    // Place your code here
+    SCAN_LED();
 }
+
+
 
 // Voltage Reference: AREF pin
 #define ADC_VREF_TYPE ((0<<REFS1) | (0<<REFS0) | (0<<ADLAR))
@@ -57,15 +65,15 @@ TCNT1L=0x8300 & 0xff;
 // Read the AD conversion result
 unsigned int read_adc(unsigned char adc_input)
 {
-ADMUX=adc_input | ADC_VREF_TYPE;
-// Delay needed for the stabilization of the ADC input voltage
-delay_us(10);
-// Start the AD conversion
-ADCSRA|=(1<<ADSC);
-// Wait for the AD conversion to complete
-while ((ADCSRA & (1<<ADIF))==0);
-ADCSRA|=(1<<ADIF);
-return ADCW;
+    ADMUX=adc_input | ADC_VREF_TYPE;
+    // Delay needed for the stabilization of the ADC input voltage
+    delay_us(10);
+    // Start the AD conversion
+    ADCSRA|=(1<<ADSC);
+    // Wait for the AD conversion to complete
+    while ((ADCSRA & (1<<ADIF))==0);
+    ADCSRA|=(1<<ADIF);
+    return ADCW;
 }
 
 void main(void)
@@ -172,10 +180,13 @@ TWCR=(0<<TWEA) | (0<<TWSTA) | (0<<TWSTO) | (0<<TWEN) | (0<<TWIE);
 
 // Global enable interrupts
 #asm("sei")
-
-while (1)
-      {
-      // Place your code here
-
-      }
+BUZZER_ON;
+delay_ms(100);
+BUZZER_OFF;
+    while (1)
+    {
+    // Place your code here
+        Uint_data_led1 = ADE7753_READ(1,VRMS);
+        Uint_data_led2 = ADE7753_READ(1,IRMS);
+    }
 }

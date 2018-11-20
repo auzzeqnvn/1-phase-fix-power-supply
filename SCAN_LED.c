@@ -1,7 +1,7 @@
 #include "scan_led.h"
 #include "SPI_SOFTWARE.h"
 
-unsigned char Uc_led_count = 1;
+unsigned char   Uc_led_count = 1;
 unsigned char   Uc_led_data = 0;
 unsigned int    Uint_data_led1 = 0;
 unsigned int    Uint_data_led2 = 0;
@@ -152,7 +152,7 @@ void    SELECT_LED(unsigned char num_led,unsigned char    data)
         }
         case    7:
         {
-            byte1 = 0x85;
+            byte1 |= 0x85;
             break;
         }
         case    8:

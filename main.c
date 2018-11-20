@@ -13,26 +13,31 @@ Company :
 Comments: 
 
 
-Chip type               : ATmega8L
-Program type            : Application
-AVR Core Clock frequency: 8.000000 MHz
+Chip type               : ATmega48
+AVR Core Clock frequency: 8,000000 MHz
 Memory model            : Small
 External RAM size       : 0
-Data Stack size         : 256
+Data Stack size         : 128
 *******************************************************/
 
-#include <mega8.h>
-#include "ADE7753.h"
-#include "scan_led.h"
+#include <mega48.h>
+#include <scan_led.h>
+#include <ADE7753.h>
 #include <delay.h>
-
-#define BUZZER  PORTD.5
-#define BUZZER_ON   BUZZER = 1
-#define BUZZER_OFF  BUZZER = 0
 
 // Declare your global variables here
 
+#define BUZZER  PORTD.5
+#define BUZZER_OFF  BUZZER = 0
+#define BUZZER_ON   BUZZER = 1
 
+
+unsigned int    AI10_Voltage_buff[10];
+unsigned int    AI10_Currrent_buff[10];
+unsigned long   Ulong_tmp;
+unsigned char   Uc_Buff_count = 0;
+unsigned char   Uc_Loop_count;
+bit Bit_sample_full = 0;
 // External Interrupt 0 service routine
 interrupt [EXT_INT0] void ext_int0_isr(void)
 {
@@ -51,13 +56,11 @@ interrupt [EXT_INT1] void ext_int1_isr(void)
 interrupt [TIM1_OVF] void timer1_ovf_isr(void)
 {
     // Reinitialize Timer1 value
-    TCNT1H=0x8300 >> 8;
-    TCNT1L=0x8300 & 0xff;
+    TCNT1H=0xA000 >> 8;
+    TCNT1L=0xA000 & 0xff;
     // Place your code here
     SCAN_LED();
 }
-
-
 
 // Voltage Reference: AREF pin
 #define ADC_VREF_TYPE ((0<<REFS1) | (0<<REFS0) | (0<<ADLAR))
@@ -65,20 +68,28 @@ interrupt [TIM1_OVF] void timer1_ovf_isr(void)
 // Read the AD conversion result
 unsigned int read_adc(unsigned char adc_input)
 {
-    ADMUX=adc_input | ADC_VREF_TYPE;
-    // Delay needed for the stabilization of the ADC input voltage
-    delay_us(10);
-    // Start the AD conversion
-    ADCSRA|=(1<<ADSC);
-    // Wait for the AD conversion to complete
-    while ((ADCSRA & (1<<ADIF))==0);
-    ADCSRA|=(1<<ADIF);
-    return ADCW;
+ADMUX=adc_input | ADC_VREF_TYPE;
+// Delay needed for the stabilization of the ADC input voltage
+delay_us(10);
+// Start the AD conversion
+ADCSRA|=(1<<ADSC);
+// Wait for the AD conversion to complete
+while ((ADCSRA & (1<<ADIF))==0);
+ADCSRA|=(1<<ADIF);
+return ADCW;
 }
 
 void main(void)
 {
 // Declare your local variables here
+
+// Crystal Oscillator division factor: 1
+#pragma optsize-
+CLKPR=(1<<CLKPCE);
+CLKPR=(0<<CLKPCE) | (0<<CLKPS3) | (0<<CLKPS2) | (0<<CLKPS1) | (0<<CLKPS0);
+#ifdef _OPTIMIZE_SIZE_
+#pragma optsize+
+#endif
 
 // Input/Output Ports initialization
 // Port B initialization
@@ -96,18 +107,24 @@ PORTC=(0<<PORTC6) | (0<<PORTC5) | (0<<PORTC4) | (0<<PORTC3) | (0<<PORTC2) | (0<<
 // Port D initialization
 // Function: Bit7=In Bit6=In Bit5=Out Bit4=In Bit3=In Bit2=In Bit1=In Bit0=In 
 DDRD=(0<<DDD7) | (0<<DDD6) | (1<<DDD5) | (0<<DDD4) | (0<<DDD3) | (0<<DDD2) | (0<<DDD1) | (0<<DDD0);
-// State: Bit7=T Bit6=T Bit5=0 Bit4=T Bit3=T Bit2=T Bit1=T Bit0=T 
+// State: Bit7=T Bit6=T Bit5=T Bit4=T Bit3=T Bit2=T Bit1=T Bit0=T 
 PORTD=(0<<PORTD7) | (0<<PORTD6) | (0<<PORTD5) | (0<<PORTD4) | (0<<PORTD3) | (0<<PORTD2) | (0<<PORTD1) | (0<<PORTD0);
 
 // Timer/Counter 0 initialization
 // Clock source: System Clock
 // Clock value: Timer 0 Stopped
-TCCR0=(0<<CS02) | (0<<CS01) | (0<<CS00);
+// Mode: Normal top=0xFF
+// OC0A output: Disconnected
+// OC0B output: Disconnected
+TCCR0A=(0<<COM0A1) | (0<<COM0A0) | (0<<COM0B1) | (0<<COM0B0) | (0<<WGM01) | (0<<WGM00);
+TCCR0B=(0<<WGM02) | (0<<CS02) | (0<<CS01) | (0<<CS00);
 TCNT0=0x00;
+OCR0A=0x00;
+OCR0B=0x00;
 
 // Timer/Counter 1 initialization
 // Clock source: System Clock
-// Clock value: 8000.000 kHz
+// Clock value: 8000,000 kHz
 // Mode: Normal top=0xFFFF
 // OC1A output: Disconnected
 // OC1B output: Disconnected
@@ -133,27 +150,40 @@ OCR1BL=0x00;
 // Clock source: System Clock
 // Clock value: Timer2 Stopped
 // Mode: Normal top=0xFF
-// OC2 output: Disconnected
-ASSR=0<<AS2;
-TCCR2=(0<<PWM2) | (0<<COM21) | (0<<COM20) | (0<<CTC2) | (0<<CS22) | (0<<CS21) | (0<<CS20);
+// OC2A output: Disconnected
+// OC2B output: Disconnected
+ASSR=(0<<EXCLK) | (0<<AS2);
+TCCR2A=(0<<COM2A1) | (0<<COM2A0) | (0<<COM2B1) | (0<<COM2B0) | (0<<WGM21) | (0<<WGM20);
+TCCR2B=(0<<WGM22) | (0<<CS22) | (0<<CS21) | (0<<CS20);
 TCNT2=0x00;
-OCR2=0x00;
+OCR2A=0x00;
+OCR2B=0x00;
 
-// Timer(s)/Counter(s) Interrupt(s) initialization
-TIMSK=(0<<OCIE2) | (0<<TOIE2) | (0<<TICIE1) | (0<<OCIE1A) | (0<<OCIE1B) | (1<<TOIE1) | (0<<TOIE0);
+// Timer/Counter 0 Interrupt(s) initialization
+TIMSK0=(0<<OCIE0B) | (0<<OCIE0A) | (0<<TOIE0);
+
+// Timer/Counter 1 Interrupt(s) initialization
+TIMSK1=(0<<ICIE1) | (0<<OCIE1B) | (0<<OCIE1A) | (1<<TOIE1);
+
+// Timer/Counter 2 Interrupt(s) initialization
+TIMSK2=(0<<OCIE2B) | (0<<OCIE2A) | (0<<TOIE2);
 
 // External Interrupt(s) initialization
 // INT0: On
 // INT0 Mode: Falling Edge
 // INT1: On
 // INT1 Mode: Falling Edge
-GICR|=(1<<INT1) | (1<<INT0);
-MCUCR=(1<<ISC11) | (0<<ISC10) | (1<<ISC01) | (0<<ISC00);
-GIFR=(1<<INTF1) | (1<<INTF0);
+// Interrupt on any change on pins PCINT0-7: Off
+// Interrupt on any change on pins PCINT8-14: Off
+// Interrupt on any change on pins PCINT16-23: Off
+// EICRA=(1<<ISC11) | (0<<ISC10) | (1<<ISC01) | (0<<ISC00);
+// EIMSK=(1<<INT1) | (1<<INT0);
+// EIFR=(1<<INTF1) | (1<<INTF0);
+// PCICR=(0<<PCIE2) | (0<<PCIE1) | (0<<PCIE0);
 
 // USART initialization
 // USART disabled
-UCSRB=(0<<RXCIE) | (0<<TXCIE) | (0<<UDRIE) | (0<<RXEN) | (0<<TXEN) | (0<<UCSZ2) | (0<<RXB8) | (0<<TXB8);
+UCSR0B=(0<<RXCIE0) | (0<<TXCIE0) | (0<<UDRIE0) | (0<<RXEN0) | (0<<TXEN0) | (0<<UCSZ02) | (0<<RXB80) | (0<<TXB80);
 
 // Analog Comparator initialization
 // Analog Comparator: Off
@@ -162,13 +192,20 @@ UCSRB=(0<<RXCIE) | (0<<TXCIE) | (0<<UDRIE) | (0<<RXEN) | (0<<TXEN) | (0<<UCSZ2) 
 // The Analog Comparator's negative input is
 // connected to the AIN1 pin
 ACSR=(1<<ACD) | (0<<ACBG) | (0<<ACO) | (0<<ACI) | (0<<ACIE) | (0<<ACIC) | (0<<ACIS1) | (0<<ACIS0);
+// Digital input buffer on AIN0: On
+// Digital input buffer on AIN1: On
+DIDR1=(0<<AIN0D) | (0<<AIN1D);
 
 // ADC initialization
-// ADC Clock frequency: 1000.000 kHz
+// ADC Clock frequency: 1000,000 kHz
 // ADC Voltage Reference: AREF pin
-ADMUX=ADC_VREF_TYPE;
-ADCSRA=(1<<ADEN) | (0<<ADSC) | (0<<ADFR) | (0<<ADIF) | (0<<ADIE) | (0<<ADPS2) | (1<<ADPS1) | (1<<ADPS0);
-SFIOR=(0<<ACME);
+// ADC Auto Trigger Source: ADC Stopped
+// Digital input buffers on ADC0: Off, ADC1: On, ADC2: Off, ADC3: Off
+// ADC4: Off, ADC5: Off
+// DIDR0=(1<<ADC5D) | (1<<ADC4D) | (1<<ADC3D) | (1<<ADC2D) | (0<<ADC1D) | (1<<ADC0D);
+// ADMUX=ADC_VREF_TYPE;
+// ADCSRA=(1<<ADEN) | (0<<ADSC) | (0<<ADATE) | (0<<ADIF) | (0<<ADIE) | (0<<ADPS2) | (1<<ADPS1) | (1<<ADPS0);
+// ADCSRB=(0<<ADTS2) | (0<<ADTS1) | (0<<ADTS0);
 
 // SPI initialization
 // SPI disabled
@@ -180,13 +217,45 @@ TWCR=(0<<TWEA) | (0<<TWSTA) | (0<<TWSTO) | (0<<TWEN) | (0<<TWIE);
 
 // Global enable interrupts
 #asm("sei")
+Uint_data_led1 = 0;
+Uint_data_led2 = 0;
 BUZZER_ON;
 delay_ms(100);
 BUZZER_OFF;
-    while (1)
-    {
-    // Place your code here
-        Uint_data_led1 = ADE7753_READ(1,VRMS);
-        Uint_data_led2 = ADE7753_READ(1,IRMS);
-    }
+while (1)
+      {
+      // Place your code here
+        AI10_Voltage_buff[Uc_Buff_count] = ADE7753_READ(1,VRMS);
+        AI10_Currrent_buff[Uc_Buff_count] = ADE7753_READ(1,IRMS);
+        Uc_Buff_count++;
+        if(Uc_Buff_count > 9)
+        {
+            Uc_Buff_count = 0;
+            if(Bit_sample_full == 0)
+            {
+                Bit_sample_full = 1;
+                BUZZER_ON;
+                delay_ms(100);
+                BUZZER_OFF;
+            }
+        }
+        if(Bit_sample_full)
+        {
+            Ulong_tmp = 0;
+            for(Uc_Loop_count = 0; Uc_Loop_count<10;Uc_Loop_count++)
+            {
+                Ulong_tmp += AI10_Voltage_buff[Uc_Loop_count];
+            }
+            Ulong_tmp /= 10;
+            Uint_data_led1 = (unsigned int) Ulong_tmp;
+            Ulong_tmp = 0;
+            for(Uc_Loop_count = 0; Uc_Loop_count<10;Uc_Loop_count++)
+            {
+                Ulong_tmp += AI10_Currrent_buff[Uc_Loop_count];
+            }
+            Ulong_tmp /= 10;
+            Uint_data_led2 = (unsigned int) Ulong_tmp;
+        }
+        delay_ms(500);
+      }
 }
