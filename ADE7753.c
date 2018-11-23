@@ -129,14 +129,14 @@ unsigned int    ADE7753_READ(unsigned char IC_CS,unsigned char addr,unsigned cha
         res <<= 8;
         res += data[i];
     }
-    if(addr == 0x16)    return  (res/360);
-    if(addr == 0x17)    return  (res/2800);
+    if(addr == 0x16)    return  (res/448);
+    if(addr == 0x17)    return  (res/2060);
     return (data[2] + data[1] + data[0]);
 }
 
 void    ADE7753_INIT(void)
 {
     ADE7753_WRITE(1,MODE,0x00,0x00,0x00);
-    //ADE7753_WRITE(1,SAGLVL,0X2a,0X00,0X00);
-    //ADE7753_WRITE(1,SAGCYC,0XFF,0X00,0X00);
+    ADE7753_WRITE(1,SAGLVL,0X2a,0X00,0X00);
+    ADE7753_WRITE(1,SAGCYC,0XFF,0X00,0X00);
 }

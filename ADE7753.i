@@ -202,13 +202,14 @@ for(i=0;i<num_data;i++)
 res <<= 8;
 res += data[i];
 }
-if(addr == 0x16)    return  (res/360);
-if(addr == 0x17)    return  (res/2800);
+if(addr == 0x16)    return  (res/448);
+if(addr == 0x17)    return  (res/2060);
 return (data[2] + data[1] + data[0]);
 }
 
 void    ADE7753_INIT(void)
 {
 ADE7753_WRITE(1,0x09,2,0x00,0x00,0x00);
-
+ADE7753_WRITE(1,0x1F,1,0X2a,0X00,0X00);
+ADE7753_WRITE(1,0x1E,1,0XFF,0X00,0X00);
 }

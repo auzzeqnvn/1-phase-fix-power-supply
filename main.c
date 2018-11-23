@@ -40,9 +40,11 @@ Data Stack size         : 128
 
 unsigned int    AI10_Voltage_buff[10];
 unsigned int    AI10_Currrent_buff[10];
+unsigned int    AI10_Temp_buff[10];
 unsigned long   Ulong_tmp;
 unsigned char   Uc_Buff_count = 0;
 unsigned char   Uc_Loop_count;
+unsigned char   Uc_Loop2_count;
 bit Bit_sample_full = 0;
 bit Bit_warning = 0;
 // External Interrupt 0 service routine
@@ -272,7 +274,11 @@ delay_ms(200);
 TIMER2_ON;
 delay_ms(200);
 TIMER2_OFF;
-
+for(Uc_Loop_count = 0; Uc_Loop_count<10;Uc_Loop_count++)
+{
+    AI10_Voltage_buff[Uc_Loop_count] = 0;
+    AI10_Currrent_buff[Uc_Loop_count] = 0;
+}
 while (1)
       {
       // Place your code here
@@ -283,46 +289,62 @@ while (1)
         if(Uc_Buff_count > 9)
         {
             Uc_Buff_count = 0;
-            if(Bit_sample_full == 0)
-            {
-                /* Xac nhan buffer da day */
-                Bit_sample_full = 1;
-                TIMER2_ON;
-                delay_ms(200);
-                TIMER2_OFF;
-            }
         }
-        if(Bit_sample_full)
+
+        for(Uc_Loop_count = 0; Uc_Loop_count<10;Uc_Loop_count++)
         {
-            Ulong_tmp = 0;
-            for(Uc_Loop_count = 0; Uc_Loop_count<10;Uc_Loop_count++)
-            {
-                Ulong_tmp += AI10_Voltage_buff[Uc_Loop_count];
-            }
-            Ulong_tmp /= 10;
-            Uint_data_led1 = (unsigned int) Ulong_tmp;
-
-            Ulong_tmp = 0;
-            for(Uc_Loop_count = 0; Uc_Loop_count<10;Uc_Loop_count++)
-            {
-                Ulong_tmp += AI10_Currrent_buff[Uc_Loop_count];
-            }
-            Ulong_tmp /= 10;
-            Uint_data_led2 = (unsigned int) Ulong_tmp;
-
-            /* 
-            *   Doc Current_Set
-            *   So sanh va dua ra canh bao
-            */
-            Ulong_tmp = read_adc(1);
-            Ulong_tmp = Ulong_tmp*(CURRENT_SET_MAX-CURRENT_SET_MIN)*100/1023 + CURRENT_SET_MIN*100;
-            //Uint_data_led1 = Ulong_tmp;
-            if(Ulong_tmp < Uint_data_led2)  
-            {
-                Bit_warning = 1;
-            }
-            else    Bit_warning = 0;
+            AI10_Temp_buff[Uc_Loop_count] = AI10_Voltage_buff[Uc_Loop_count];
         }
+        for(Uc_Loop_count = 0; Uc_Loop_count<10;Uc_Loop_count++)
+        {
+            for(Uc_Loop2_count = Uc_Loop_count; Uc_Loop2_count<10;Uc_Loop2_count++)
+            {
+                if(AI10_Temp_buff[Uc_Loop_count] > AI10_Temp_buff[Uc_Loop2_count] )
+                {
+                    Ulong_tmp = AI10_Temp_buff[Uc_Loop_count];
+                    AI10_Temp_buff[Uc_Loop_count] = AI10_Temp_buff[Uc_Loop2_count];
+                    AI10_Temp_buff[Uc_Loop2_count] = Ulong_tmp;
+                }
+            }
+        }
+        
+        Ulong_tmp = 0;
+        for(Uc_Loop_count = 2; Uc_Loop_count<8;Uc_Loop_count++)
+        {
+            Ulong_tmp += AI10_Temp_buff[Uc_Loop_count];
+        }
+        Ulong_tmp /= 6;
+        Uint_data_led1 = (unsigned int) Ulong_tmp;
+
+        // Ulong_tmp = 0;
+        // for(Uc_Loop_count = 0; Uc_Loop_count<10;Uc_Loop_count++)
+        // {
+        //     Ulong_tmp += AI10_Voltage_buff[Uc_Loop_count];
+        // }
+        // Ulong_tmp /= 10;
+        // Uint_data_led1 = (unsigned int) Ulong_tmp;
+
+        Ulong_tmp = 0;
+        for(Uc_Loop_count = 0; Uc_Loop_count<10;Uc_Loop_count++)
+        {
+            Ulong_tmp += AI10_Currrent_buff[Uc_Loop_count];
+        }
+        Ulong_tmp /= 10;
+        Uint_data_led2 = (unsigned int) Ulong_tmp;
+
+        /* 
+        *   Doc Current_Set
+        *   So sanh va dua ra canh bao
+        */
+        Ulong_tmp = read_adc(1);
+        Ulong_tmp = Ulong_tmp*(CURRENT_SET_MAX-CURRENT_SET_MIN)*100/1023 + CURRENT_SET_MIN*100;
+        //Uint_data_led1 = Ulong_tmp;
+        if(Ulong_tmp < Uint_data_led2)  
+        {
+            Bit_warning = 1;
+        }
+        else    Bit_warning = 0;
+
         if(Bit_warning)
         {
             TIMER2_ON;
@@ -330,6 +352,6 @@ while (1)
             TIMER2_OFF;
             delay_ms(100);
         }
-        else    delay_ms(200);
+        else    delay_ms(400);
       }
 }

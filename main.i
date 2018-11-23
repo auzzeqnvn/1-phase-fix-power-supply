@@ -78,9 +78,11 @@ void delay_ms(unsigned int n);
 
 unsigned int    AI10_Voltage_buff[10];
 unsigned int    AI10_Currrent_buff[10];
+unsigned int    AI10_Temp_buff[10];
 unsigned long   Ulong_tmp;
 unsigned char   Uc_Buff_count = 0;
 unsigned char   Uc_Loop_count;
+unsigned char   Uc_Loop2_count;
 bit Bit_sample_full = 0;
 bit Bit_warning = 0;
 
@@ -201,7 +203,11 @@ delay_ms(200);
 (*(unsigned char *) 0x70)=(0<<2       ) | (0<<1       ) | (1<<0       );
 delay_ms(200);
 (*(unsigned char *) 0x70)=(0<<2       ) | (0<<1       ) | (0<<0       );
-
+for(Uc_Loop_count = 0; Uc_Loop_count<10;Uc_Loop_count++)
+{
+AI10_Voltage_buff[Uc_Loop_count] = 0;
+AI10_Currrent_buff[Uc_Loop_count] = 0;
+}
 while (1)
 {
 
@@ -211,23 +217,31 @@ Uc_Buff_count++;
 if(Uc_Buff_count > 9)
 {
 Uc_Buff_count = 0;
-if(Bit_sample_full == 0)
-{
+}
 
-Bit_sample_full = 1;
-(*(unsigned char *) 0x70)=(0<<2       ) | (0<<1       ) | (1<<0       );
-delay_ms(200);
-(*(unsigned char *) 0x70)=(0<<2       ) | (0<<1       ) | (0<<0       );
-}
-}
-if(Bit_sample_full)
-{
-Ulong_tmp = 0;
 for(Uc_Loop_count = 0; Uc_Loop_count<10;Uc_Loop_count++)
 {
-Ulong_tmp += AI10_Voltage_buff[Uc_Loop_count];
+AI10_Temp_buff[Uc_Loop_count] = AI10_Voltage_buff[Uc_Loop_count];
 }
-Ulong_tmp /= 10;
+for(Uc_Loop_count = 0; Uc_Loop_count<10;Uc_Loop_count++)
+{
+for(Uc_Loop2_count = Uc_Loop_count; Uc_Loop2_count<10;Uc_Loop2_count++)
+{
+if(AI10_Temp_buff[Uc_Loop_count] > AI10_Temp_buff[Uc_Loop2_count] )
+{
+Ulong_tmp = AI10_Temp_buff[Uc_Loop_count];
+AI10_Temp_buff[Uc_Loop_count] = AI10_Temp_buff[Uc_Loop2_count];
+AI10_Temp_buff[Uc_Loop2_count] = Ulong_tmp;
+}
+}
+}
+
+Ulong_tmp = 0;
+for(Uc_Loop_count = 2; Uc_Loop_count<8;Uc_Loop_count++)
+{
+Ulong_tmp += AI10_Temp_buff[Uc_Loop_count];
+}
+Ulong_tmp /= 6;
 Uint_data_led1 = (unsigned int) Ulong_tmp;
 
 Ulong_tmp = 0;
@@ -246,7 +260,7 @@ if(Ulong_tmp < Uint_data_led2)
 Bit_warning = 1;
 }
 else    Bit_warning = 0;
-}
+
 if(Bit_warning)
 {
 (*(unsigned char *) 0x70)=(0<<2       ) | (0<<1       ) | (1<<0       );
@@ -254,6 +268,6 @@ delay_ms(100);
 (*(unsigned char *) 0x70)=(0<<2       ) | (0<<1       ) | (0<<0       );
 delay_ms(100);
 }
-else    delay_ms(200);
+else    delay_ms(400);
 }
 }
