@@ -72,5 +72,5 @@
 void    SPI_7753_SEND(unsigned char data);
 unsigned char    SPI_7753_RECEIVE(void);
 void    ADE7753_WRITE(unsigned char IC_CS,unsigned char addr,unsigned char num_data,unsigned char data_1,unsigned char data_2,unsigned char data_3);
-unsigned int    ADE7753_READ(unsigned char IC_CS,unsigned char addr,unsigned char num_data);
+unsigned long int    ADE7753_READ(unsigned char IC_CS,unsigned char addr,unsigned char num_data);
 void    ADE7753_INIT(void);

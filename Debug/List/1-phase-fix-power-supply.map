@@ -6,10 +6,10 @@ Uc_led_data                                                                     
 Uint_data_led1                                                                    0x0182       2
 Uint_data_led2                                                                    0x0184       2
 Uint_data_led3                                                                    0x0186       2
-AI10_Voltage_buff                                                                 0x0188      20
-AI10_Currrent_buff                                                                0x019C      20
-AI10_Temp_buff                                                                    0x01B0      20
-Ulong_tmp                                                                         0x01C4       4
+AI10_Voltage_buff                                                                 0x0188      40
+AI10_Currrent_buff                                                                0x01B0      40
+AI10_Temp_buff                                                                    0x01D8      40
+Ulong_tmp                                                                         0x0200       4
 
 EEPROM Allocation [bytes]
 Variable                                                                          Address   Size
@@ -21,22 +21,25 @@ Variable                                                                        
 Uc_Buff_count                                                                     R4           1
 Uc_Loop_count                                                                     R3           1
 Uc_Loop2_count                                                                    R6           1
+Uint_Timer_Count                                                                  R7,R8        2
 Bit_sample_full                                                                   GPIOR0.0  1bit
 Bit_warning                                                                       GPIOR0.1  1bit
+Bit_Zero_flag                                                                     GPIOR0.2  1bit
 
 FLASH Allocation [words]
 Function                                                                          Address   Size
 ------------------------------------------------------------------------------------------------
-ext_int0_isr                                                                      0x0004F      1
-ext_int1_isr                                                                      0x00050      1
-timer1_ovf_isr                                                                    0x00051     30
-timer2_ovf_isr                                                                    0x0006F     11
-read_adc                                                                          0x0007A     27
-main                                                                              0x00095    299
-SPI_7753_SEND                                                                     0x001C0     20
-SPI_7753_RECEIVE                                                                  0x001D4     16
-ADE7753_READ                                                                      0x001E4    111
-SEND_DATA_LED                                                                     0x00253     41
-SELECT_LED                                                                        0x0027C    149
-SCAN_LED                                                                          0x00311     91
-SPI_SENDBYTE                                                                      0x0036C     27
+ext_int0_isr                                                                      0x00051      2
+timer1_ovf_isr                                                                    0x00053     39
+timer2_ovf_isr                                                                    0x0007A     11
+read_adc                                                                          0x00085     27
+main                                                                              0x000A0    339
+SPI_7753_SEND                                                                     0x001F3     20
+SPI_7753_RECEIVE                                                                  0x00207     16
+ADE7753_WRITE                                                                     0x00217     46
+ADE7753_READ                                                                      0x00245     92
+ADE7753_INIT                                                                      0x002A1     30
+SEND_DATA_LED                                                                     0x002BF     39
+SELECT_LED                                                                        0x002E6    149
+SCAN_LED                                                                          0x0037B     91
+SPI_SENDBYTE                                                                      0x003D6     27

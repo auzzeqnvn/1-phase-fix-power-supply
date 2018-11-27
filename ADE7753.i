@@ -58,7 +58,7 @@ sfrb SREG=0x3f;
 void    SPI_7753_SEND(unsigned char data);
 unsigned char    SPI_7753_RECEIVE(void);
 void    ADE7753_WRITE(unsigned char IC_CS,unsigned char addr,unsigned char num_data,unsigned char data_1,unsigned char data_2,unsigned char data_3);
-unsigned int    ADE7753_READ(unsigned char IC_CS,unsigned char addr,unsigned char num_data);
+unsigned long int    ADE7753_READ(unsigned char IC_CS,unsigned char addr,unsigned char num_data);
 void    ADE7753_INIT(void);
 
 #pragma used+
@@ -101,13 +101,13 @@ unsigned char data;
 data = 0;
 for(cnt = 0;cnt < 8; cnt++)
 {
+data <<= 1; 
 PORTC.4 = 1;
 delay_us(50);
 if(PINC.3 == 1)   
 {
 data += 1;
-}
-data <<= 1;   
+}  
 PORTC.4 = 0; 
 delay_us(50); 
 }
@@ -157,7 +157,7 @@ PORTC.5 = 1;
 PORTB.0 = 1;
 PORTB.0 = 1;
 }
-unsigned int    ADE7753_READ(unsigned char IC_CS,unsigned char addr,unsigned char num_data)
+unsigned long int    ADE7753_READ(unsigned char IC_CS,unsigned char addr,unsigned char num_data)
 {
 unsigned char   i;
 unsigned char   data[4];
@@ -202,14 +202,19 @@ for(i=0;i<num_data;i++)
 res <<= 8;
 res += data[i];
 }
-if(addr == 0x16)    return  (res/448);
-if(addr == 0x17)    return  (res/2060);
-return (data[2] + data[1] + data[0]);
+return res;
 }
 
 void    ADE7753_INIT(void)
 {
 ADE7753_WRITE(1,0x09,2,0x00,0x00,0x00);
+delay_ms(200);
+ADE7753_WRITE(1,0x0A,2,0x00,0x10,0x00);
+delay_ms(200);
+ADE7753_WRITE(1,0x0C,2,0x00,0x00,0x00);
+delay_ms(200);
 ADE7753_WRITE(1,0x1F,1,0X2a,0X00,0X00);
+delay_ms(200);
 ADE7753_WRITE(1,0x1E,1,0XFF,0X00,0X00);
+delay_ms(200);
 }

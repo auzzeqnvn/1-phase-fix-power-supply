@@ -66,7 +66,7 @@ void    SCAN_LED(void);
 void    SPI_7753_SEND(unsigned char data);
 unsigned char    SPI_7753_RECEIVE(void);
 void    ADE7753_WRITE(unsigned char IC_CS,unsigned char addr,unsigned char num_data,unsigned char data_1,unsigned char data_2,unsigned char data_3);
-unsigned int    ADE7753_READ(unsigned char IC_CS,unsigned char addr,unsigned char num_data);
+unsigned long int    ADE7753_READ(unsigned char IC_CS,unsigned char addr,unsigned char num_data);
 void    ADE7753_INIT(void);
 
 #pragma used+
@@ -76,24 +76,28 @@ void delay_ms(unsigned int n);
 
 #pragma used-
 
-unsigned int    AI10_Voltage_buff[10];
-unsigned int    AI10_Currrent_buff[10];
-unsigned int    AI10_Temp_buff[10];
+unsigned int    AI10_Voltage_buff[20];
+unsigned int    AI10_Currrent_buff[20];
+unsigned int    AI10_Temp_buff[20];
 unsigned long   Ulong_tmp;
 unsigned char   Uc_Buff_count = 0;
 unsigned char   Uc_Loop_count;
 unsigned char   Uc_Loop2_count;
+unsigned   int  Uint_Timer_Count = 0;
 bit Bit_sample_full = 0;
 bit Bit_warning = 0;
+bit Bit_Zero_flag = 0;
 
 interrupt [2] void ext_int0_isr(void)
 {
 
+Bit_Zero_flag = 1;
 }
 
 interrupt [3] void ext_int1_isr(void)
 {
 
+Bit_Zero_flag = 1;
 }
 
 interrupt [14] void timer1_ovf_isr(void)
@@ -103,6 +107,7 @@ interrupt [14] void timer1_ovf_isr(void)
 (*(unsigned char *) 0x84)=0xA000 & 0xff;
 
 SCAN_LED();
+if(Uint_Timer_Count < 200)  Uint_Timer_Count++;
 }
 
 interrupt [10] void timer2_ovf_isr(void)
@@ -177,6 +182,11 @@ OCR0B=0x00;
 
 (*(unsigned char *) 0x70)=(0<<2       ) | (0<<1       ) | (1<<0       );
 
+(*(unsigned char *) 0x69)=(1<<3       ) | (0<<2       ) | (1<<1       ) | (0<<0       );
+EIMSK=(1<<1       ) | (1<<0       );
+EIFR=(1<<1       ) | (1<<0       );
+(*(unsigned char *) 0x68)=(0<<2       ) | (0<<1       ) | (0<<0       );
+
 (*(unsigned char *) 0xc1)=(0<<7       ) | (0<<6       ) | (0<<5       ) | (0<<4       ) | (0<<3       ) | (0<<2       ) | (0<<1       ) | (0<<0       );
 
 ACSR=(1<<7       ) | (0<<6       ) | (0<<5       ) | (0<<4       ) | (0<<3       ) | (0<<2       ) | (0<<1       ) | (0<<0       );
@@ -195,7 +205,8 @@ SPCR=(0<<7       ) | (0<<6       ) | (0<<5       ) | (0<<4       ) | (0<<3      
 #asm("sei")
 Uint_data_led1 = 0;
 Uint_data_led2 = 0;
-
+(*(unsigned char *) 0x70)=(0<<2       ) | (0<<1       ) | (0<<0       );
+ADE7753_INIT();    
 (*(unsigned char *) 0x70)=(0<<2       ) | (0<<1       ) | (1<<0       );
 delay_ms(200);
 (*(unsigned char *) 0x70)=(0<<2       ) | (0<<1       ) | (0<<0       );
@@ -208,24 +219,25 @@ for(Uc_Loop_count = 0; Uc_Loop_count<10;Uc_Loop_count++)
 AI10_Voltage_buff[Uc_Loop_count] = 0;
 AI10_Currrent_buff[Uc_Loop_count] = 0;
 }
+Uc_Buff_count = 0;
 while (1)
 {
 
-AI10_Voltage_buff[Uc_Buff_count] = ADE7753_READ(1,0x17,3);
-AI10_Currrent_buff[Uc_Buff_count] = ADE7753_READ(1,0x16,3);
-Uc_Buff_count++;
-if(Uc_Buff_count > 9)
+if(Bit_Zero_flag)
 {
-Uc_Buff_count = 0;
-}
 
-for(Uc_Loop_count = 0; Uc_Loop_count<10;Uc_Loop_count++)
+AI10_Voltage_buff[Uc_Buff_count] = (unsigned int)(ADE7753_READ(1,0x17,3)/1034);
+AI10_Currrent_buff[Uc_Buff_count] = (unsigned int)(ADE7753_READ(1,0x16,3)/228);
+
+ADE7753_WRITE(1,0x0C,2,0x00,0x00,0x00);
+
+for(Uc_Loop_count = 0; Uc_Loop_count<20;Uc_Loop_count++)
 {
 AI10_Temp_buff[Uc_Loop_count] = AI10_Voltage_buff[Uc_Loop_count];
 }
-for(Uc_Loop_count = 0; Uc_Loop_count<10;Uc_Loop_count++)
+for(Uc_Loop_count = 0; Uc_Loop_count<20;Uc_Loop_count++)
 {
-for(Uc_Loop2_count = Uc_Loop_count; Uc_Loop2_count<10;Uc_Loop2_count++)
+for(Uc_Loop2_count = Uc_Loop_count; Uc_Loop2_count<20;Uc_Loop2_count++)
 {
 if(AI10_Temp_buff[Uc_Loop_count] > AI10_Temp_buff[Uc_Loop2_count] )
 {
@@ -237,20 +249,48 @@ AI10_Temp_buff[Uc_Loop2_count] = Ulong_tmp;
 }
 
 Ulong_tmp = 0;
-for(Uc_Loop_count = 2; Uc_Loop_count<8;Uc_Loop_count++)
+for(Uc_Loop_count = 4; Uc_Loop_count<20-4;Uc_Loop_count++)
 {
 Ulong_tmp += AI10_Temp_buff[Uc_Loop_count];
 }
-Ulong_tmp /= 6;
-Uint_data_led1 = (unsigned int) Ulong_tmp;
+Ulong_tmp /= (20-2*4);
+if(Uint_Timer_Count == 200) Uint_data_led1 = (unsigned int) Ulong_tmp;
+
+for(Uc_Loop_count = 0; Uc_Loop_count<20;Uc_Loop_count++)
+{
+AI10_Temp_buff[Uc_Loop_count] = AI10_Currrent_buff[Uc_Loop_count];
+}
+for(Uc_Loop_count = 0; Uc_Loop_count<20;Uc_Loop_count++)
+{
+for(Uc_Loop2_count = Uc_Loop_count; Uc_Loop2_count<20;Uc_Loop2_count++)
+{
+if(AI10_Temp_buff[Uc_Loop_count] > AI10_Temp_buff[Uc_Loop2_count] )
+{
+Ulong_tmp = AI10_Temp_buff[Uc_Loop_count];
+AI10_Temp_buff[Uc_Loop_count] = AI10_Temp_buff[Uc_Loop2_count];
+AI10_Temp_buff[Uc_Loop2_count] = Ulong_tmp;
+}
+}
+}
 
 Ulong_tmp = 0;
-for(Uc_Loop_count = 0; Uc_Loop_count<10;Uc_Loop_count++)
+for(Uc_Loop_count = 4; Uc_Loop_count<20-4;Uc_Loop_count++)
 {
-Ulong_tmp += AI10_Currrent_buff[Uc_Loop_count];
+Ulong_tmp += AI10_Temp_buff[Uc_Loop_count];
 }
-Ulong_tmp /= 10;
+Ulong_tmp /= (20-2*4);
+
+if(Uint_Timer_Count == 200) 
+{
 Uint_data_led2 = (unsigned int) Ulong_tmp;
+Uint_Timer_Count = 0;
+}
+
+Uc_Buff_count++;
+if(Uc_Buff_count >= 20)
+{
+Uc_Buff_count = 0;
+}
 
 Ulong_tmp = read_adc(1);
 Ulong_tmp = Ulong_tmp*(20-7)*100/1023 + 7*100;
@@ -260,6 +300,8 @@ if(Ulong_tmp < Uint_data_led2)
 Bit_warning = 1;
 }
 else    Bit_warning = 0;
+Bit_Zero_flag = 0;
+}
 
 if(Bit_warning)
 {
@@ -268,6 +310,6 @@ delay_ms(100);
 (*(unsigned char *) 0x70)=(0<<2       ) | (0<<1       ) | (0<<0       );
 delay_ms(100);
 }
-else    delay_ms(400);
+
 }
 }

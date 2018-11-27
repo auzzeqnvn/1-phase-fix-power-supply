@@ -28,13 +28,13 @@ unsigned char    SPI_7753_RECEIVE(void)
     data = 0;
     for(cnt = 0;cnt < 8; cnt++)
     {
+        data <<= 1; 
         SPI_SCK_HIGHT;
         delay_us(50);
         if(SPI_MISO_HIGHT)   
         {
             data += 1;
-        }
-        data <<= 1;   
+        }  
         SPI_SCK_LOW; 
         delay_us(50); 
     }
@@ -84,7 +84,7 @@ void    ADE7753_WRITE(unsigned char IC_CS,unsigned char addr,unsigned char num_d
     PHASE_2_OFF;
     PHASE_3_OFF;
 }
-unsigned int    ADE7753_READ(unsigned char IC_CS,unsigned char addr,unsigned char num_data)
+unsigned long int    ADE7753_READ(unsigned char IC_CS,unsigned char addr,unsigned char num_data)
 {
     unsigned char   i;
     unsigned char   data[4];
@@ -129,14 +129,19 @@ unsigned int    ADE7753_READ(unsigned char IC_CS,unsigned char addr,unsigned cha
         res <<= 8;
         res += data[i];
     }
-    if(addr == 0x16)    return  (res/448);
-    if(addr == 0x17)    return  (res/2060);
-    return (data[2] + data[1] + data[0]);
+    return res;
 }
 
 void    ADE7753_INIT(void)
 {
     ADE7753_WRITE(1,MODE,0x00,0x00,0x00);
+    delay_ms(200);
+    ADE7753_WRITE(1,IRQEN,0x00,0x10,0x00);
+    delay_ms(200);
+    ADE7753_WRITE(1,RSTSTATUS,0x00,0x00,0x00);
+    delay_ms(200);
     ADE7753_WRITE(1,SAGLVL,0X2a,0X00,0X00);
+    delay_ms(200);
     ADE7753_WRITE(1,SAGCYC,0XFF,0X00,0X00);
+    delay_ms(200);
 }
