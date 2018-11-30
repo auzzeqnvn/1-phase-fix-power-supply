@@ -6,6 +6,9 @@ unsigned char   Uc_led_data = 0;
 unsigned int    Uint_data_led1 = 0;
 unsigned int    Uint_data_led2 = 0;
 unsigned int    Uint_data_led3 = 0;
+unsigned char   Uc_Select_led=1;
+
+unsigned char   BCDLED[11]={0xB7,0x81,0x3D,0xAD,0x8B,0xAE,0xBE,0x85,0xBF,0xAF,0};
 
 /* Day du lieu quet led qua duong spi_software
 Co thẻ day tu 1 den 3 byte du lieu.
@@ -27,6 +30,63 @@ void    SEND_DATA_LED(unsigned char num_bytes,unsigned char  byte_first,unsigned
     for(i=0;i<(num_bytes - 1);i++)    SPI_SENDBYTE(data[i],0);
     SPI_SENDBYTE(data[i],1);
 }
+
+
+/* 
+Ham quet led
+num_led: Thu tu led
+data: Du lieu hien thi tren led.
+*/
+void    SCAN_LED(void)
+{
+    unsigned char   byte1,byte2,byte3;
+    unsigned char    data;
+    unsigned char   bit_left;
+    bit_left = 0x01;
+    byte1 = 0;
+    byte2 = 0;
+    byte3 = 0;
+    //byte1 |= BCDLED[data];
+
+    Uc_Select_led++;
+    bit_left <<= (Uc_Select_led-1);
+    if(Uc_Select_led > 8)   
+    {
+        Uc_Select_led = 1;
+        bit_left = 0x01;
+    }
+    /* 7-seg 1*/
+    data = Uint_data_led1/1000;
+    byte1 = BCDLED[data];
+    if(byte1 & bit_left) byte3 |= 0x01;
+    data = Uint_data_led1/100%10;
+    byte1 = BCDLED[data];
+    if(byte1 & bit_left) byte3 |= 0x02;
+    data = Uint_data_led1/10%10;
+    byte1 = BCDLED[data];
+    byte1 |= 0x40;
+    if(byte1 & bit_left) byte3 |= 0x04;
+    data = Uint_data_led1%10;
+    byte1 = BCDLED[data];
+    if(byte1 & bit_left) byte3 |= 0x08;
+    /* 7-seg 2 */
+    data = Uint_data_led2/1000;
+    byte1 = BCDLED[data];
+    if(byte1 & bit_left) byte3 |= 0x80;
+    data = Uint_data_led2/100%10;
+    byte1 = BCDLED[data];
+    byte1 |= 0x40;
+    if(byte1 & bit_left) byte3 |= 0x40;
+    data = Uint_data_led2/10%10;
+    byte1 = BCDLED[data];
+    if(byte1 & bit_left) byte3 |= 0x20;
+    data = Uint_data_led2%10;
+    byte1 = BCDLED[data];
+    if(byte1 & bit_left) byte3 |= 0x10;
+
+    SEND_DATA_LED(2,bit_left,byte3,byte2);
+}
+
 
 void    SELECT_LED(unsigned char num_led,unsigned char    data)
 {
@@ -169,21 +229,21 @@ void    SELECT_LED(unsigned char num_led,unsigned char    data)
     SEND_DATA_LED(2,byte1,byte2,byte3);
 }
 
-void SCAN_LED(void)
-{
-    if(Uc_led_count == 1)   Uc_led_data = Uint_data_led1/1000;
-    else if(Uc_led_count == 2)   Uc_led_data = (Uint_data_led1/100)%10;
-    else if(Uc_led_count == 3)   Uc_led_data = (Uint_data_led1/10)%10;
-    else if(Uc_led_count == 4)   Uc_led_data = (Uint_data_led1%10);
-    else if(Uc_led_count == 5)   Uc_led_data = Uint_data_led2/1000;
-    else if(Uc_led_count == 6)   Uc_led_data = (Uint_data_led2/100)%10;
-    else if(Uc_led_count == 7)   Uc_led_data = (Uint_data_led2/10)%10;
-    else if(Uc_led_count == 8)   Uc_led_data = (Uint_data_led2%10);
-    else if(Uc_led_count == 9)   Uc_led_data = Uint_data_led3/1000;
-    else if(Uc_led_count == 10)   Uc_led_data = (Uint_data_led3/100)%10;
-    else if(Uc_led_count == 11)   Uc_led_data = (Uint_data_led3/10)%10;
-    else if(Uc_led_count == 12)   Uc_led_data = (Uint_data_led3%10);
-    SELECT_LED(Uc_led_count,Uc_led_data);
-    Uc_led_count++;
-    if(Uc_led_count > NUM_LED_SCAN*4)    Uc_led_count = 1;
-}
+// void SCAN_LED(void)
+// {
+//     if(Uc_led_count == 1)   Uc_led_data = Uint_data_led1/1000;
+//     else if(Uc_led_count == 2)   Uc_led_data = (Uint_data_led1/100)%10;
+//     else if(Uc_led_count == 3)   Uc_led_data = (Uint_data_led1/10)%10;
+//     else if(Uc_led_count == 4)   Uc_led_data = (Uint_data_led1%10);
+//     else if(Uc_led_count == 5)   Uc_led_data = Uint_data_led2/1000;
+//     else if(Uc_led_count == 6)   Uc_led_data = (Uint_data_led2/100)%10;
+//     else if(Uc_led_count == 7)   Uc_led_data = (Uint_data_led2/10)%10;
+//     else if(Uc_led_count == 8)   Uc_led_data = (Uint_data_led2%10);
+//     else if(Uc_led_count == 9)   Uc_led_data = Uint_data_led3/1000;
+//     else if(Uc_led_count == 10)   Uc_led_data = (Uint_data_led3/100)%10;
+//     else if(Uc_led_count == 11)   Uc_led_data = (Uint_data_led3/10)%10;
+//     else if(Uc_led_count == 12)   Uc_led_data = (Uint_data_led3%10);
+//     SELECT_LED(Uc_led_count,Uc_led_data);
+//     Uc_led_count++;
+//     if(Uc_led_count > NUM_LED_SCAN*4)    Uc_led_count = 1;
+// }

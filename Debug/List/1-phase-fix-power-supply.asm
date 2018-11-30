@@ -1090,6 +1090,7 @@ __DELAY_USW_LOOP:
 	.DEF _Uc_Loop2_count=R6
 	.DEF _Uint_Timer_Count=R7
 	.DEF _Uint_Timer_Count_msb=R8
+	.DEF _Uc_Select_led=R5
 
 ;GPIOR0 INITIALIZATION VALUE
 	.EQU __GPIOR0_INIT=0x00
@@ -1130,20 +1131,23 @@ __START_OF_CODE:
 
 ;GLOBAL REGISTER VARIABLES INITIALIZATION
 __REG_VARS:
-	.DB  0x0,0x0,0x0,0x0
+	.DB  0x0,0x1,0x0,0x0
 	.DB  0x0
 
 _0x40003:
 	.DB  0x1
+_0x40004:
+	.DB  0xB7,0x81,0x3D,0xAD,0x8B,0xAE,0xBE,0x85
+	.DB  0xBF,0xAF
 
 __GLOBAL_INI_TBL:
 	.DW  0x05
 	.DW  0x04
 	.DW  __REG_VARS*2
 
-	.DW  0x01
-	.DW  _Uc_led_count
-	.DW  _0x40003*2
+	.DW  0x0A
+	.DW  _BCDLED
+	.DW  _0x40004*2
 
 _0xFFFFFFFF:
 	.DW  0
@@ -1715,7 +1719,7 @@ _0x14:
 	RJMP _0x17
 ; 0000 0126         {
 ; 0000 0127             /* Ghi nhan gia tri dong dien va dien ap vao buffer */
-; 0000 0128             AI10_Voltage_buff[Uc_Buff_count] = (unsigned int)(ADE7753_READ(1,VRMS)/1034);
+; 0000 0128             AI10_Voltage_buff[Uc_Buff_count] = (unsigned int)(ADE7753_READ(1,VRMS)/1030);
 	MOV  R30,R4
 	LDI  R26,LOW(_AI10_Voltage_buff)
 	LDI  R27,HIGH(_AI10_Voltage_buff)
@@ -1725,7 +1729,7 @@ _0x14:
 	RCALL SUBOPT_0x8
 	LDI  R30,LOW(23)
 	RCALL SUBOPT_0x9
-	__GETD1N 0x40A
+	__GETD1N 0x406
 	RCALL __DIVD21U
 	POP  R26
 	POP  R27
@@ -2165,7 +2169,9 @@ _ADE7753_WRITE:
 ; 0001 003C         }
 ; 0001 003D         case 2:
 _0x2001B:
-	RCALL SUBOPT_0x1F
+	CPI  R30,LOW(0x2)
+	LDI  R26,HIGH(0x2)
+	CPC  R31,R26
 	BRNE _0x20022
 ; 0001 003E         {
 ; 0001 003F             PHASE_1_OFF;
@@ -2179,7 +2185,9 @@ _0x2001B:
 ; 0001 0043         }
 ; 0001 0044         case 3:
 _0x20022:
-	RCALL SUBOPT_0x20
+	CPI  R30,LOW(0x3)
+	LDI  R26,HIGH(0x3)
+	CPC  R31,R26
 	BRNE _0x2001A
 ; 0001 0045         {
 ; 0001 0046             PHASE_1_OFF;
@@ -2200,27 +2208,27 @@ _0x2001A:
 	ORI  R30,0x80
 	STD  Y+9,R30
 ; 0001 004E     delay_us(100);
-	RCALL SUBOPT_0x21
+	RCALL SUBOPT_0x1F
 ; 0001 004F     SPI_7753_SEND(addr);
 	LDD  R26,Y+9
 	RCALL _SPI_7753_SEND
 ; 0001 0050     delay_us(100);
-	RCALL SUBOPT_0x21
+	RCALL SUBOPT_0x1F
 ; 0001 0051     for(i=0;i<num_data;i++)    SPI_7753_SEND(data[i]);
 	LDI  R17,LOW(0)
 _0x20031:
 	LDD  R30,Y+8
 	CP   R17,R30
 	BRSH _0x20032
-	RCALL SUBOPT_0x22
-	RCALL SUBOPT_0x23
+	RCALL SUBOPT_0x20
+	RCALL SUBOPT_0x21
 	LD   R26,X
 	RCALL _SPI_7753_SEND
 	SUBI R17,-1
 	RJMP _0x20031
 _0x20032:
 ; 0001 0052 delay_us(100);
-	RCALL SUBOPT_0x21
+	RCALL SUBOPT_0x1F
 ; 0001 0053     PHASE_1_OFF;
 	SBI  0x8,5
 ; 0001 0054     PHASE_2_OFF;
@@ -2252,7 +2260,7 @@ _ADE7753_READ:
 _0x2003A:
 	CPI  R17,4
 	BRSH _0x2003B
-	RCALL SUBOPT_0x22
+	RCALL SUBOPT_0x20
 	MOVW R26,R28
 	ADIW R26,5
 	ADD  R26,R30
@@ -2279,7 +2287,9 @@ _0x2003B:
 ; 0001 0065         }
 ; 0001 0066         case 2:
 _0x2003F:
-	RCALL SUBOPT_0x1F
+	CPI  R30,LOW(0x2)
+	LDI  R26,HIGH(0x2)
+	CPC  R31,R26
 	BRNE _0x20046
 ; 0001 0067         {
 ; 0001 0068             PHASE_1_OFF;
@@ -2293,7 +2303,9 @@ _0x2003F:
 ; 0001 006C         }
 ; 0001 006D         case 3:
 _0x20046:
-	RCALL SUBOPT_0x20
+	CPI  R30,LOW(0x3)
+	LDI  R26,HIGH(0x3)
+	CPC  R31,R26
 	BRNE _0x2003E
 ; 0001 006E         {
 ; 0001 006F             PHASE_1_OFF;
@@ -2307,7 +2319,7 @@ _0x20046:
 ; 0001 0074     }
 _0x2003E:
 ; 0001 0075     delay_us(100);
-	RCALL SUBOPT_0x21
+	RCALL SUBOPT_0x1F
 ; 0001 0076     addr &= 0x3F;
 	LDD  R30,Y+10
 	ANDI R30,LOW(0x3F)
@@ -2316,14 +2328,14 @@ _0x2003E:
 	LDD  R26,Y+10
 	RCALL _SPI_7753_SEND
 ; 0001 0078     delay_us(100);
-	RCALL SUBOPT_0x21
+	RCALL SUBOPT_0x1F
 ; 0001 0079     for(i=0;i<num_data;i++) data[i] = SPI_7753_RECEIVE();
 	LDI  R17,LOW(0)
 _0x20055:
 	LDD  R30,Y+9
 	CP   R17,R30
 	BRSH _0x20056
-	RCALL SUBOPT_0x22
+	RCALL SUBOPT_0x20
 	MOVW R26,R28
 	ADIW R26,5
 	ADD  R30,R26
@@ -2338,7 +2350,7 @@ _0x20055:
 	RJMP _0x20055
 _0x20056:
 ; 0001 007A delay_us(100);
-	RCALL SUBOPT_0x21
+	RCALL SUBOPT_0x1F
 ; 0001 007B     PHASE_1_OFF;
 	SBI  0x8,5
 ; 0001 007C     PHASE_2_OFF;
@@ -2355,22 +2367,22 @@ _0x2005E:
 	BRSH _0x2005F
 ; 0001 0080     {
 ; 0001 0081         res <<= 8;
-	RCALL SUBOPT_0x24
+	RCALL SUBOPT_0x22
 	LDI  R30,LOW(8)
 	RCALL __LSLD12
-	RCALL SUBOPT_0x25
+	RCALL SUBOPT_0x23
 ; 0001 0082         res += data[i];
-	RCALL SUBOPT_0x22
+	RCALL SUBOPT_0x20
 	MOVW R26,R28
 	ADIW R26,5
 	ADD  R26,R30
 	ADC  R27,R31
 	LD   R30,X
 	LDI  R31,0
-	RCALL SUBOPT_0x24
+	RCALL SUBOPT_0x22
 	RCALL __CWD1
 	RCALL __ADDD12
-	RCALL SUBOPT_0x25
+	RCALL SUBOPT_0x23
 ; 0001 0083     }
 	SUBI R17,-1
 	RJMP _0x2005E
@@ -2390,13 +2402,13 @@ _ADE7753_INIT:
 ; 0001 0089     ADE7753_WRITE(1,MODE,0x00,0x00,0x00);
 	RCALL SUBOPT_0x8
 	LDI  R30,LOW(9)
-	RCALL SUBOPT_0x26
-	RCALL SUBOPT_0x27
+	RCALL SUBOPT_0x24
+	RCALL SUBOPT_0x25
 ; 0001 008A     delay_ms(200);
 ; 0001 008B     ADE7753_WRITE(1,IRQEN,0x00,0x10,0x00);
 	RCALL SUBOPT_0x8
 	LDI  R30,LOW(10)
-	RCALL SUBOPT_0x26
+	RCALL SUBOPT_0x24
 	LDI  R30,LOW(16)
 	ST   -Y,R30
 	LDI  R26,LOW(0)
@@ -2415,7 +2427,7 @@ _ADE7753_INIT:
 	RCALL SUBOPT_0x8
 	LDI  R30,LOW(42)
 	ST   -Y,R30
-	RCALL SUBOPT_0x27
+	RCALL SUBOPT_0x25
 ; 0001 0090     delay_ms(200);
 ; 0001 0091     ADE7753_WRITE(1,SAGCYC,0XFF,0X00,0X00);
 	RCALL SUBOPT_0x8
@@ -2424,7 +2436,7 @@ _ADE7753_INIT:
 	RCALL SUBOPT_0x8
 	LDI  R30,LOW(255)
 	ST   -Y,R30
-	RCALL SUBOPT_0x27
+	RCALL SUBOPT_0x25
 ; 0001 0092     delay_ms(200);
 ; 0001 0093 }
 	RET
@@ -2449,6 +2461,9 @@ _ADE7753_INIT:
 ;unsigned int    Uint_data_led1 = 0;
 ;unsigned int    Uint_data_led2 = 0;
 ;unsigned int    Uint_data_led3 = 0;
+;unsigned char   Uc_Select_led=1;
+;
+;unsigned char   BCDLED[11]={0xB7,0x81,0x3D,0xAD,0x8B,0xAE,0xBE,0x85,0xBF,0xAF,0};
 ;
 ;/* Day du lieu quet led qua duong spi_software
 ;Co thẻ day tu 1 den 3 byte du lieu.
@@ -2459,14 +2474,14 @@ _ADE7753_INIT:
 ;data_third ; du lieu thu 3
 ;*/
 ;void    SEND_DATA_LED(unsigned char num_bytes,unsigned char  byte_first,unsigned char  byte_second,unsigned char  byte_t ...
-; 0002 0013 {
+; 0002 0016 {
 
 	.CSEG
 _SEND_DATA_LED:
 ; .FSTART _SEND_DATA_LED
-; 0002 0014     unsigned char   i;
-; 0002 0015     unsigned char   data[4];
-; 0002 0016     for(i=0;i<4;i++)    data[i] = 0;
+; 0002 0017     unsigned char   i;
+; 0002 0018     unsigned char   data[4];
+; 0002 0019     for(i=0;i<4;i++)    data[i] = 0;
 	ST   -Y,R26
 	SBIW R28,4
 	ST   -Y,R17
@@ -2477,24 +2492,24 @@ _SEND_DATA_LED:
 ;	i -> R17
 ;	data -> Y+1
 	LDI  R17,LOW(0)
-_0x40005:
+_0x40006:
 	CPI  R17,4
-	BRSH _0x40006
-	RCALL SUBOPT_0x22
-	RCALL SUBOPT_0x23
+	BRSH _0x40007
+	RCALL SUBOPT_0x20
+	RCALL SUBOPT_0x21
 	LDI  R30,LOW(0)
 	ST   X,R30
 	SUBI R17,-1
-	RJMP _0x40005
-_0x40006:
-; 0002 0017 data[0] = byte_first;
+	RJMP _0x40006
+_0x40007:
+; 0002 001A data[0] = byte_first;
 	RCALL SUBOPT_0x1C
-; 0002 0018     data[1] = byte_second;
-; 0002 0019     data[2] = byte_third;
-; 0002 001A 
-; 0002 001B     for(i=0;i<(num_bytes - 1);i++)    SPI_SENDBYTE(data[i],0);
+; 0002 001B     data[1] = byte_second;
+; 0002 001C     data[2] = byte_third;
+; 0002 001D 
+; 0002 001E     for(i=0;i<(num_bytes - 1);i++)    SPI_SENDBYTE(data[i],0);
 	LDI  R17,LOW(0)
-_0x40008:
+_0x40009:
 	LDD  R30,Y+8
 	LDI  R31,0
 	SBIW R30,1
@@ -2502,472 +2517,334 @@ _0x40008:
 	LDI  R27,0
 	CP   R26,R30
 	CPC  R27,R31
-	BRGE _0x40009
-	RCALL SUBOPT_0x22
-	RCALL SUBOPT_0x23
+	BRGE _0x4000A
+	RCALL SUBOPT_0x20
+	RCALL SUBOPT_0x21
 	LD   R30,X
 	ST   -Y,R30
 	LDI  R26,LOW(0)
 	RCALL _SPI_SENDBYTE
 	SUBI R17,-1
-	RJMP _0x40008
-_0x40009:
-; 0002 001C SPI_SENDBYTE(data[i],1);
-	RCALL SUBOPT_0x22
-	RCALL SUBOPT_0x23
+	RJMP _0x40009
+_0x4000A:
+; 0002 001F SPI_SENDBYTE(data[i],1);
+	RCALL SUBOPT_0x20
+	RCALL SUBOPT_0x21
 	LD   R30,X
 	ST   -Y,R30
 	LDI  R26,LOW(1)
 	RCALL _SPI_SENDBYTE
-; 0002 001D }
+; 0002 0020 }
 	LDD  R17,Y+0
 	ADIW R28,9
 	RET
 ; .FEND
 ;
+;
+;/*
+;Ham quet led
+;num_led: Thu tu led
+;data: Du lieu hien thi tren led.
+;*/
+;void    SCAN_LED(void)
+; 0002 0029 {
+_SCAN_LED:
+; .FSTART _SCAN_LED
+; 0002 002A     unsigned char   byte1,byte2,byte3;
+; 0002 002B     unsigned char    data;
+; 0002 002C     unsigned char   bit_left;
+; 0002 002D     bit_left = 0x01;
+	RCALL __SAVELOCR6
+;	byte1 -> R17
+;	byte2 -> R16
+;	byte3 -> R19
+;	data -> R18
+;	bit_left -> R21
+	LDI  R21,LOW(1)
+; 0002 002E     byte1 = 0;
+	LDI  R17,LOW(0)
+; 0002 002F     byte2 = 0;
+	LDI  R16,LOW(0)
+; 0002 0030     byte3 = 0;
+	LDI  R19,LOW(0)
+; 0002 0031     //byte1 |= BCDLED[data];
+; 0002 0032 
+; 0002 0033     Uc_Select_led++;
+	INC  R5
+; 0002 0034     bit_left <<= (Uc_Select_led-1);
+	MOV  R30,R5
+	SUBI R30,LOW(1)
+	MOV  R26,R21
+	RCALL __LSLB12
+	MOV  R21,R30
+; 0002 0035     if(Uc_Select_led > 8)
+	LDI  R30,LOW(8)
+	CP   R30,R5
+	BRSH _0x4000B
+; 0002 0036     {
+; 0002 0037         Uc_Select_led = 1;
+	LDI  R30,LOW(1)
+	MOV  R5,R30
+; 0002 0038         bit_left = 0x01;
+	LDI  R21,LOW(1)
+; 0002 0039     }
+; 0002 003A     /* 7-seg 1*/
+; 0002 003B     data = Uint_data_led1/1000;
+_0x4000B:
+	RCALL SUBOPT_0x26
+	RCALL SUBOPT_0x27
+; 0002 003C     byte1 = BCDLED[data];
+; 0002 003D     if(byte1 & bit_left) byte3 |= 0x01;
+	BREQ _0x4000C
+	ORI  R19,LOW(1)
+; 0002 003E     data = Uint_data_led1/100%10;
+_0x4000C:
+	RCALL SUBOPT_0x26
+	RCALL SUBOPT_0x28
+; 0002 003F     byte1 = BCDLED[data];
+; 0002 0040     if(byte1 & bit_left) byte3 |= 0x02;
+	RCALL SUBOPT_0x29
+	BREQ _0x4000D
+	ORI  R19,LOW(2)
+; 0002 0041     data = Uint_data_led1/10%10;
+_0x4000D:
+	RCALL SUBOPT_0x26
+	RCALL SUBOPT_0x2A
+	RCALL SUBOPT_0x2B
+; 0002 0042     byte1 = BCDLED[data];
+; 0002 0043     byte1 |= 0x40;
+	ORI  R17,LOW(64)
+; 0002 0044     if(byte1 & bit_left) byte3 |= 0x04;
+	RCALL SUBOPT_0x29
+	BREQ _0x4000E
+	ORI  R19,LOW(4)
+; 0002 0045     data = Uint_data_led1%10;
+_0x4000E:
+	RCALL SUBOPT_0x26
+	RCALL SUBOPT_0x2C
+; 0002 0046     byte1 = BCDLED[data];
+; 0002 0047     if(byte1 & bit_left) byte3 |= 0x08;
+	BREQ _0x4000F
+	ORI  R19,LOW(8)
+; 0002 0048     /* 7-seg 2 */
+; 0002 0049     data = Uint_data_led2/1000;
+_0x4000F:
+	RCALL SUBOPT_0x2D
+	RCALL SUBOPT_0x27
+; 0002 004A     byte1 = BCDLED[data];
+; 0002 004B     if(byte1 & bit_left) byte3 |= 0x80;
+	BREQ _0x40010
+	ORI  R19,LOW(128)
+; 0002 004C     data = Uint_data_led2/100%10;
+_0x40010:
+	RCALL SUBOPT_0x2D
+	RCALL SUBOPT_0x28
+; 0002 004D     byte1 = BCDLED[data];
+; 0002 004E     byte1 |= 0x40;
+	ORI  R17,LOW(64)
+; 0002 004F     if(byte1 & bit_left) byte3 |= 0x40;
+	RCALL SUBOPT_0x29
+	BREQ _0x40011
+	ORI  R19,LOW(64)
+; 0002 0050     data = Uint_data_led2/10%10;
+_0x40011:
+	RCALL SUBOPT_0x2D
+	RCALL SUBOPT_0x2A
+	RCALL SUBOPT_0x2B
+; 0002 0051     byte1 = BCDLED[data];
+; 0002 0052     if(byte1 & bit_left) byte3 |= 0x20;
+	RCALL SUBOPT_0x29
+	BREQ _0x40012
+	ORI  R19,LOW(32)
+; 0002 0053     data = Uint_data_led2%10;
+_0x40012:
+	RCALL SUBOPT_0x2D
+	RCALL SUBOPT_0x2C
+; 0002 0054     byte1 = BCDLED[data];
+; 0002 0055     if(byte1 & bit_left) byte3 |= 0x10;
+	BREQ _0x40013
+	ORI  R19,LOW(16)
+; 0002 0056 
+; 0002 0057     SEND_DATA_LED(2,bit_left,byte3,byte2);
+_0x40013:
+	LDI  R30,LOW(2)
+	ST   -Y,R30
+	ST   -Y,R21
+	ST   -Y,R19
+	MOV  R26,R16
+	RCALL _SEND_DATA_LED
+; 0002 0058 }
+	RCALL __LOADLOCR6
+	ADIW R28,6
+	RET
+; .FEND
+;
+;
 ;void    SELECT_LED(unsigned char num_led,unsigned char    data)
-; 0002 0020 {
-_SELECT_LED:
-; .FSTART _SELECT_LED
-; 0002 0021     unsigned char   byte1,byte2,byte3;
-; 0002 0022     byte1 = 0;
-	ST   -Y,R26
-	RCALL __SAVELOCR4
+; 0002 005C {
+; 0002 005D     unsigned char   byte1,byte2,byte3;
+; 0002 005E     byte1 = 0;
 ;	num_led -> Y+5
 ;	data -> Y+4
 ;	byte1 -> R17
 ;	byte2 -> R16
 ;	byte3 -> R19
-	LDI  R17,LOW(0)
-; 0002 0023     byte2 = 0;
-	LDI  R16,LOW(0)
-; 0002 0024     byte3 = 0;
-	LDI  R19,LOW(0)
-; 0002 0025     switch(num_led)
-	LDD  R30,Y+5
-	RCALL SUBOPT_0x1D
-; 0002 0026     {
-; 0002 0027         case    1:
-	BRNE _0x4000D
-; 0002 0028         {
-; 0002 0029             byte3 = 0x01;
-	LDI  R19,LOW(1)
-; 0002 002A             byte2 = 0x01;
-	LDI  R16,LOW(1)
-; 0002 002B             break;
-	RJMP _0x4000C
-; 0002 002C         }
-; 0002 002D         case    2:
-_0x4000D:
-	RCALL SUBOPT_0x1F
-	BRNE _0x4000E
-; 0002 002E         {
-; 0002 002F             byte3 = 0x02;
-	LDI  R19,LOW(2)
-; 0002 0030             byte2 = 0x02;
-	LDI  R16,LOW(2)
-; 0002 0031             //byte1 = 0x04;
-; 0002 0032             break;
-	RJMP _0x4000C
-; 0002 0033         }
-; 0002 0034         case    3:
-_0x4000E:
-	RCALL SUBOPT_0x20
-	BRNE _0x4000F
-; 0002 0035         {
-; 0002 0036             byte3 = 0x04;
-	LDI  R19,LOW(4)
-; 0002 0037             byte2 = 0x04;
-	LDI  R16,LOW(4)
-; 0002 0038             byte1 = 0x40;
-	LDI  R17,LOW(64)
-; 0002 0039             break;
-	RJMP _0x4000C
-; 0002 003A         }
-; 0002 003B         case    4:
-_0x4000F:
-	CPI  R30,LOW(0x4)
-	LDI  R26,HIGH(0x4)
-	CPC  R31,R26
-	BRNE _0x40010
-; 0002 003C         {
-; 0002 003D             byte3 = 0x08;
-	LDI  R19,LOW(8)
-; 0002 003E             byte2 = 0x08;
-	LDI  R16,LOW(8)
-; 0002 003F             break;
-	RJMP _0x4000C
-; 0002 0040         }
-; 0002 0041         case    5:
-_0x40010:
-	CPI  R30,LOW(0x5)
-	LDI  R26,HIGH(0x5)
-	CPC  R31,R26
-	BRNE _0x40011
-; 0002 0042         {
-; 0002 0043             byte3 = 0x40;
-	LDI  R19,LOW(64)
-; 0002 0044             byte2 = 0x80;
-	RJMP _0x4003E
-; 0002 0045             break;
-; 0002 0046         }
-; 0002 0047         case    6:
-_0x40011:
-	CPI  R30,LOW(0x6)
-	LDI  R26,HIGH(0x6)
-	CPC  R31,R26
-	BRNE _0x40012
-; 0002 0048         {
-; 0002 0049             byte3 = 0x20;
-	LDI  R19,LOW(32)
-; 0002 004A             byte2 = 0x40;
-	LDI  R16,LOW(64)
-; 0002 004B             byte1 = 0x40;
-	LDI  R17,LOW(64)
-; 0002 004C             break;
-	RJMP _0x4000C
-; 0002 004D         }
-; 0002 004E         case    7:
-_0x40012:
-	CPI  R30,LOW(0x7)
-	LDI  R26,HIGH(0x7)
-	CPC  R31,R26
-	BRNE _0x40013
-; 0002 004F         {
-; 0002 0050             byte3 = 0x10;
-	LDI  R19,LOW(16)
-; 0002 0051             byte2 = 0x20;
-	LDI  R16,LOW(32)
-; 0002 0052             break;
-	RJMP _0x4000C
-; 0002 0053         }
-; 0002 0054         case    8:
-_0x40013:
-	CPI  R30,LOW(0x8)
-	LDI  R26,HIGH(0x8)
-	CPC  R31,R26
-	BRNE _0x40014
-; 0002 0055         {
-; 0002 0056             byte3 = 0x80;
-	LDI  R19,LOW(128)
-; 0002 0057             byte2 = 0x10;
-	LDI  R16,LOW(16)
-; 0002 0058             break;
-	RJMP _0x4000C
-; 0002 0059         }
-; 0002 005A         case    9:
-_0x40014:
-	CPI  R30,LOW(0x9)
-	LDI  R26,HIGH(0x9)
-	CPC  R31,R26
-	BRNE _0x40015
-; 0002 005B         {
-; 0002 005C             byte3 = 0x00;
-	LDI  R19,LOW(0)
-; 0002 005D             byte2 = 0x40;
-	LDI  R16,LOW(64)
-; 0002 005E             break;
-	RJMP _0x4000C
-; 0002 005F         }
-; 0002 0060         case    10:
-_0x40015:
-	CPI  R30,LOW(0xA)
-	LDI  R26,HIGH(0xA)
-	CPC  R31,R26
-	BRNE _0x40016
-; 0002 0061         {
-; 0002 0062             byte3 = 0x00;
-	LDI  R19,LOW(0)
-; 0002 0063             byte2 = 0x20;
-	LDI  R16,LOW(32)
-; 0002 0064             byte1 = 0x04;
-	LDI  R17,LOW(4)
-; 0002 0065             break;
-	RJMP _0x4000C
-; 0002 0066         }
-; 0002 0067         case    11:
-_0x40016:
-	CPI  R30,LOW(0xB)
-	LDI  R26,HIGH(0xB)
-	CPC  R31,R26
-	BRNE _0x40017
-; 0002 0068         {
-; 0002 0069             byte3 = 0x00;
-	LDI  R19,LOW(0)
-; 0002 006A             byte2 = 0x10;
-	LDI  R16,LOW(16)
-; 0002 006B             break;
-	RJMP _0x4000C
-; 0002 006C         }
-; 0002 006D         case    12:
-_0x40017:
-	CPI  R30,LOW(0xC)
-	LDI  R26,HIGH(0xC)
-	CPC  R31,R26
-	BRNE _0x4000C
-; 0002 006E         {
-; 0002 006F             byte3 = 0x00;
-	LDI  R19,LOW(0)
-; 0002 0070             byte2 = 0x80;
-_0x4003E:
-	LDI  R16,LOW(128)
-; 0002 0071             break;
-; 0002 0072         }
-; 0002 0073     }
-_0x4000C:
-; 0002 0074     switch(data)
-	LDD  R30,Y+4
-	LDI  R31,0
-; 0002 0075     {
-; 0002 0076         case    0:
-	SBIW R30,0
-	BRNE _0x4001C
-; 0002 0077         {
-; 0002 0078             byte1 |= 0xB7;
-	ORI  R17,LOW(183)
-; 0002 0079             break;
-	RJMP _0x4001B
-; 0002 007A         }
-; 0002 007B         case    1:
-_0x4001C:
-	CPI  R30,LOW(0x1)
-	LDI  R26,HIGH(0x1)
-	CPC  R31,R26
-	BRNE _0x4001D
-; 0002 007C         {
-; 0002 007D             byte1 |= 0x81;
-	ORI  R17,LOW(129)
-; 0002 007E             break;
-	RJMP _0x4001B
-; 0002 007F         }
-; 0002 0080         case    2:
-_0x4001D:
-	RCALL SUBOPT_0x1F
-	BRNE _0x4001E
-; 0002 0081         {
-; 0002 0082             byte1 |= 0x3D;
-	ORI  R17,LOW(61)
-; 0002 0083             break;
-	RJMP _0x4001B
-; 0002 0084         }
-; 0002 0085         case    3:
-_0x4001E:
-	RCALL SUBOPT_0x20
-	BRNE _0x4001F
-; 0002 0086         {
-; 0002 0087             byte1 |= 0xAD;
-	ORI  R17,LOW(173)
+; 0002 005F     byte2 = 0;
+; 0002 0060     byte3 = 0;
+; 0002 0061     switch(num_led)
+; 0002 0062     {
+; 0002 0063         case    1:
+; 0002 0064         {
+; 0002 0065             byte3 = 0x01;
+; 0002 0066             byte2 = 0x01;
+; 0002 0067             break;
+; 0002 0068         }
+; 0002 0069         case    2:
+; 0002 006A         {
+; 0002 006B             byte3 = 0x02;
+; 0002 006C             byte2 = 0x02;
+; 0002 006D             //byte1 = 0x04;
+; 0002 006E             break;
+; 0002 006F         }
+; 0002 0070         case    3:
+; 0002 0071         {
+; 0002 0072             byte3 = 0x04;
+; 0002 0073             byte2 = 0x04;
+; 0002 0074             byte1 = 0x40;
+; 0002 0075             break;
+; 0002 0076         }
+; 0002 0077         case    4:
+; 0002 0078         {
+; 0002 0079             byte3 = 0x08;
+; 0002 007A             byte2 = 0x08;
+; 0002 007B             break;
+; 0002 007C         }
+; 0002 007D         case    5:
+; 0002 007E         {
+; 0002 007F             byte3 = 0x40;
+; 0002 0080             byte2 = 0x80;
+; 0002 0081             break;
+; 0002 0082         }
+; 0002 0083         case    6:
+; 0002 0084         {
+; 0002 0085             byte3 = 0x20;
+; 0002 0086             byte2 = 0x40;
+; 0002 0087             byte1 = 0x40;
 ; 0002 0088             break;
-	RJMP _0x4001B
 ; 0002 0089         }
-; 0002 008A         case    4:
-_0x4001F:
-	CPI  R30,LOW(0x4)
-	LDI  R26,HIGH(0x4)
-	CPC  R31,R26
-	BRNE _0x40020
+; 0002 008A         case    7:
 ; 0002 008B         {
-; 0002 008C             byte1 |= 0x8B;
-	ORI  R17,LOW(139)
-; 0002 008D             break;
-	RJMP _0x4001B
-; 0002 008E         }
-; 0002 008F         case    5:
-_0x40020:
-	CPI  R30,LOW(0x5)
-	LDI  R26,HIGH(0x5)
-	CPC  R31,R26
-	BRNE _0x40021
-; 0002 0090         {
-; 0002 0091             byte1 |= 0xAE;
-	ORI  R17,LOW(174)
-; 0002 0092             break;
-	RJMP _0x4001B
-; 0002 0093         }
-; 0002 0094         case    6:
-_0x40021:
-	CPI  R30,LOW(0x6)
-	LDI  R26,HIGH(0x6)
-	CPC  R31,R26
-	BRNE _0x40022
-; 0002 0095         {
-; 0002 0096             byte1 |= 0xBE;
-	ORI  R17,LOW(190)
-; 0002 0097             break;
-	RJMP _0x4001B
-; 0002 0098         }
-; 0002 0099         case    7:
-_0x40022:
-	CPI  R30,LOW(0x7)
-	LDI  R26,HIGH(0x7)
-	CPC  R31,R26
-	BRNE _0x40023
-; 0002 009A         {
-; 0002 009B             byte1 |= 0x85;
-	ORI  R17,LOW(133)
-; 0002 009C             break;
-	RJMP _0x4001B
-; 0002 009D         }
-; 0002 009E         case    8:
-_0x40023:
-	CPI  R30,LOW(0x8)
-	LDI  R26,HIGH(0x8)
-	CPC  R31,R26
-	BRNE _0x40024
-; 0002 009F         {
-; 0002 00A0             byte1 |= 0xBF;
-	ORI  R17,LOW(191)
+; 0002 008C             byte3 = 0x10;
+; 0002 008D             byte2 = 0x20;
+; 0002 008E             break;
+; 0002 008F         }
+; 0002 0090         case    8:
+; 0002 0091         {
+; 0002 0092             byte3 = 0x80;
+; 0002 0093             byte2 = 0x10;
+; 0002 0094             break;
+; 0002 0095         }
+; 0002 0096         case    9:
+; 0002 0097         {
+; 0002 0098             byte3 = 0x00;
+; 0002 0099             byte2 = 0x40;
+; 0002 009A             break;
+; 0002 009B         }
+; 0002 009C         case    10:
+; 0002 009D         {
+; 0002 009E             byte3 = 0x00;
+; 0002 009F             byte2 = 0x20;
+; 0002 00A0             byte1 = 0x04;
 ; 0002 00A1             break;
-	RJMP _0x4001B
 ; 0002 00A2         }
-; 0002 00A3         case    9:
-_0x40024:
-	CPI  R30,LOW(0x9)
-	LDI  R26,HIGH(0x9)
-	CPC  R31,R26
-	BRNE _0x4001B
+; 0002 00A3         case    11:
 ; 0002 00A4         {
-; 0002 00A5             byte1 |= 0xAF;
-	ORI  R17,LOW(175)
-; 0002 00A6             break;
-; 0002 00A7         }
-; 0002 00A8     }
-_0x4001B:
-; 0002 00A9     SEND_DATA_LED(2,byte1,byte2,byte3);
-	LDI  R30,LOW(2)
-	ST   -Y,R30
-	ST   -Y,R17
-	ST   -Y,R16
-	MOV  R26,R19
-	RCALL _SEND_DATA_LED
-; 0002 00AA }
-	RCALL __LOADLOCR4
-	ADIW R28,6
-	RET
-; .FEND
+; 0002 00A5             byte3 = 0x00;
+; 0002 00A6             byte2 = 0x10;
+; 0002 00A7             break;
+; 0002 00A8         }
+; 0002 00A9         case    12:
+; 0002 00AA         {
+; 0002 00AB             byte3 = 0x00;
+; 0002 00AC             byte2 = 0x80;
+; 0002 00AD             break;
+; 0002 00AE         }
+; 0002 00AF     }
+; 0002 00B0     switch(data)
+; 0002 00B1     {
+; 0002 00B2         case    0:
+; 0002 00B3         {
+; 0002 00B4             byte1 |= 0xB7;
+; 0002 00B5             break;
+; 0002 00B6         }
+; 0002 00B7         case    1:
+; 0002 00B8         {
+; 0002 00B9             byte1 |= 0x81;
+; 0002 00BA             break;
+; 0002 00BB         }
+; 0002 00BC         case    2:
+; 0002 00BD         {
+; 0002 00BE             byte1 |= 0x3D;
+; 0002 00BF             break;
+; 0002 00C0         }
+; 0002 00C1         case    3:
+; 0002 00C2         {
+; 0002 00C3             byte1 |= 0xAD;
+; 0002 00C4             break;
+; 0002 00C5         }
+; 0002 00C6         case    4:
+; 0002 00C7         {
+; 0002 00C8             byte1 |= 0x8B;
+; 0002 00C9             break;
+; 0002 00CA         }
+; 0002 00CB         case    5:
+; 0002 00CC         {
+; 0002 00CD             byte1 |= 0xAE;
+; 0002 00CE             break;
+; 0002 00CF         }
+; 0002 00D0         case    6:
+; 0002 00D1         {
+; 0002 00D2             byte1 |= 0xBE;
+; 0002 00D3             break;
+; 0002 00D4         }
+; 0002 00D5         case    7:
+; 0002 00D6         {
+; 0002 00D7             byte1 |= 0x85;
+; 0002 00D8             break;
+; 0002 00D9         }
+; 0002 00DA         case    8:
+; 0002 00DB         {
+; 0002 00DC             byte1 |= 0xBF;
+; 0002 00DD             break;
+; 0002 00DE         }
+; 0002 00DF         case    9:
+; 0002 00E0         {
+; 0002 00E1             byte1 |= 0xAF;
+; 0002 00E2             break;
+; 0002 00E3         }
+; 0002 00E4     }
+; 0002 00E5     SEND_DATA_LED(2,byte1,byte2,byte3);
+; 0002 00E6 }
 ;
-;void SCAN_LED(void)
-; 0002 00AD {
-_SCAN_LED:
-; .FSTART _SCAN_LED
-; 0002 00AE     if(Uc_led_count == 1)   Uc_led_data = Uint_data_led1/1000;
-	RCALL SUBOPT_0x28
-	CPI  R26,LOW(0x1)
-	BRNE _0x40026
-	RCALL SUBOPT_0x29
-	RCALL SUBOPT_0x2A
-	RJMP _0x4003F
-; 0002 00AF     else if(Uc_led_count == 2)   Uc_led_data = (Uint_data_led1/100)%10;
-_0x40026:
-	RCALL SUBOPT_0x28
-	CPI  R26,LOW(0x2)
-	BRNE _0x40028
-	RCALL SUBOPT_0x29
-	RCALL SUBOPT_0x2B
-	RJMP _0x40040
-; 0002 00B0     else if(Uc_led_count == 3)   Uc_led_data = (Uint_data_led1/10)%10;
-_0x40028:
-	RCALL SUBOPT_0x28
-	CPI  R26,LOW(0x3)
-	BRNE _0x4002A
-	RCALL SUBOPT_0x29
-	RCALL SUBOPT_0x2C
-	RJMP _0x40040
-; 0002 00B1     else if(Uc_led_count == 4)   Uc_led_data = (Uint_data_led1%10);
-_0x4002A:
-	RCALL SUBOPT_0x28
-	CPI  R26,LOW(0x4)
-	BRNE _0x4002C
-	RCALL SUBOPT_0x29
-	RJMP _0x40040
-; 0002 00B2     else if(Uc_led_count == 5)   Uc_led_data = Uint_data_led2/1000;
-_0x4002C:
-	RCALL SUBOPT_0x28
-	CPI  R26,LOW(0x5)
-	BRNE _0x4002E
-	RCALL SUBOPT_0x2D
-	RCALL SUBOPT_0x2A
-	RJMP _0x4003F
-; 0002 00B3     else if(Uc_led_count == 6)   Uc_led_data = (Uint_data_led2/100)%10;
-_0x4002E:
-	RCALL SUBOPT_0x28
-	CPI  R26,LOW(0x6)
-	BRNE _0x40030
-	RCALL SUBOPT_0x2D
-	RCALL SUBOPT_0x2B
-	RJMP _0x40040
-; 0002 00B4     else if(Uc_led_count == 7)   Uc_led_data = (Uint_data_led2/10)%10;
-_0x40030:
-	RCALL SUBOPT_0x28
-	CPI  R26,LOW(0x7)
-	BRNE _0x40032
-	RCALL SUBOPT_0x2D
-	RCALL SUBOPT_0x2C
-	RJMP _0x40040
-; 0002 00B5     else if(Uc_led_count == 8)   Uc_led_data = (Uint_data_led2%10);
-_0x40032:
-	RCALL SUBOPT_0x28
-	CPI  R26,LOW(0x8)
-	BRNE _0x40034
-	RCALL SUBOPT_0x2D
-	RJMP _0x40040
-; 0002 00B6     else if(Uc_led_count == 9)   Uc_led_data = Uint_data_led3/1000;
-_0x40034:
-	RCALL SUBOPT_0x28
-	CPI  R26,LOW(0x9)
-	BRNE _0x40036
-	RCALL SUBOPT_0x2E
-	RCALL SUBOPT_0x2A
-	RJMP _0x4003F
-; 0002 00B7     else if(Uc_led_count == 10)   Uc_led_data = (Uint_data_led3/100)%10;
-_0x40036:
-	RCALL SUBOPT_0x28
-	CPI  R26,LOW(0xA)
-	BRNE _0x40038
-	RCALL SUBOPT_0x2E
-	RCALL SUBOPT_0x2B
-	RJMP _0x40040
-; 0002 00B8     else if(Uc_led_count == 11)   Uc_led_data = (Uint_data_led3/10)%10;
-_0x40038:
-	RCALL SUBOPT_0x28
-	CPI  R26,LOW(0xB)
-	BRNE _0x4003A
-	RCALL SUBOPT_0x2E
-	RCALL SUBOPT_0x2C
-	RJMP _0x40040
-; 0002 00B9     else if(Uc_led_count == 12)   Uc_led_data = (Uint_data_led3%10);
-_0x4003A:
-	RCALL SUBOPT_0x28
-	CPI  R26,LOW(0xC)
-	BRNE _0x4003C
-	RCALL SUBOPT_0x2E
-_0x40040:
-	LDI  R30,LOW(10)
-	LDI  R31,HIGH(10)
-	RCALL __MODW21U
-_0x4003F:
-	STS  _Uc_led_data,R30
-; 0002 00BA     SELECT_LED(Uc_led_count,Uc_led_data);
-_0x4003C:
-	LDS  R30,_Uc_led_count
-	ST   -Y,R30
-	LDS  R26,_Uc_led_data
-	RCALL _SELECT_LED
-; 0002 00BB     Uc_led_count++;
-	LDS  R30,_Uc_led_count
-	SUBI R30,-LOW(1)
-	STS  _Uc_led_count,R30
-; 0002 00BC     if(Uc_led_count > NUM_LED_SCAN*4)    Uc_led_count = 1;
-	RCALL SUBOPT_0x28
-	CPI  R26,LOW(0x9)
-	BRLO _0x4003D
-	LDI  R30,LOW(1)
-	STS  _Uc_led_count,R30
-; 0002 00BD }
-_0x4003D:
-	RET
-; .FEND
-;#include "SPI_SOFTWARE.h"
+;// void SCAN_LED(void)
+;// {
+;//     if(Uc_led_count == 1)   Uc_led_data = Uint_data_led1/1000;
+;//     else if(Uc_led_count == 2)   Uc_led_data = (Uint_data_led1/100)%10;
+;//     else if(Uc_led_count == 3)   Uc_led_data = (Uint_data_led1/10)%10;
+;//     else if(Uc_led_count == 4)   Uc_led_data = (Uint_data_led1%10);
+;//     else if(Uc_led_count == 5)   Uc_led_data = Uint_data_led2/1000;
+;//     else if(Uc_led_count == 6)   Uc_led_data = (Uint_data_led2/100)%10;
+;//     else if(Uc_led_count == 7)   Uc_led_data = (Uint_data_led2/10)%10;
+;//     else if(Uc_led_count == 8)   Uc_led_data = (Uint_data_led2%10);
+;//     else if(Uc_led_count == 9)   Uc_led_data = Uint_data_led3/1000;
+;//     else if(Uc_led_count == 10)   Uc_led_data = (Uint_data_led3/100)%10;
+;//     else if(Uc_led_count == 11)   Uc_led_data = (Uint_data_led3/10)%10;
+;//     else if(Uc_led_count == 12)   Uc_led_data = (Uint_data_led3%10);
+;//     SELECT_LED(Uc_led_count,Uc_led_data);
+;//     Uc_led_count++;
+;//     if(Uc_led_count > NUM_LED_SCAN*4)    Uc_led_count = 1;
+;// }
+; 0003 0001 #include "SPI_SOFTWARE.h"
 	#ifndef __SLEEP_DEFINED__
 	#define __SLEEP_DEFINED__
 	.EQU __se_bit=0x01
@@ -3011,7 +2888,9 @@ _0x60006:
 ; 0003 000B         data <<= 1;
 _0x60009:
 	LDD  R30,Y+2
+	LDI  R31,0
 	LSL  R30
+	ROL  R31
 	STD  Y+2,R30
 ; 0003 000C         DO_SPI_SCK = 1;
 	SBI  0x5,5
@@ -3040,15 +2919,9 @@ _0x2000001:
 ; .FEND
 
 	.DSEG
-_Uc_led_count:
-	.BYTE 0x1
-_Uc_led_data:
-	.BYTE 0x1
 _Uint_data_led1:
 	.BYTE 0x2
 _Uint_data_led2:
-	.BYTE 0x2
-_Uint_data_led3:
 	.BYTE 0x2
 _AI10_Voltage_buff:
 	.BYTE 0x28
@@ -3058,6 +2931,8 @@ _AI10_Temp_buff:
 	.BYTE 0x28
 _Ulong_tmp:
 	.BYTE 0x4
+_BCDLED:
+	.BYTE 0xB
 
 	.CSEG
 ;OPTIMIZER ADDED SUBROUTINE, CALLED 2 TIMES, CODE SIZE REDUCTION:2 WORDS
@@ -3311,7 +3186,7 @@ SUBOPT_0x1C:
 	STD  Y+3,R30
 	RET
 
-;OPTIMIZER ADDED SUBROUTINE, CALLED 3 TIMES, CODE SIZE REDUCTION:4 WORDS
+;OPTIMIZER ADDED SUBROUTINE, CALLED 2 TIMES, CODE SIZE REDUCTION:1 WORDS
 SUBOPT_0x1D:
 	LDI  R31,0
 	CPI  R30,LOW(0x1)
@@ -3325,33 +3200,19 @@ SUBOPT_0x1E:
 	SBI  0x5,0
 	RET
 
-;OPTIMIZER ADDED SUBROUTINE, CALLED 4 TIMES, CODE SIZE REDUCTION:4 WORDS
-SUBOPT_0x1F:
-	CPI  R30,LOW(0x2)
-	LDI  R26,HIGH(0x2)
-	CPC  R31,R26
-	RET
-
-;OPTIMIZER ADDED SUBROUTINE, CALLED 4 TIMES, CODE SIZE REDUCTION:4 WORDS
-SUBOPT_0x20:
-	CPI  R30,LOW(0x3)
-	LDI  R26,HIGH(0x3)
-	CPC  R31,R26
-	RET
-
 ;OPTIMIZER ADDED SUBROUTINE, CALLED 6 TIMES, CODE SIZE REDUCTION:13 WORDS
-SUBOPT_0x21:
+SUBOPT_0x1F:
 	__DELAY_USW 200
 	RET
 
 ;OPTIMIZER ADDED SUBROUTINE, CALLED 7 TIMES, CODE SIZE REDUCTION:4 WORDS
-SUBOPT_0x22:
+SUBOPT_0x20:
 	MOV  R30,R17
 	LDI  R31,0
 	RET
 
 ;OPTIMIZER ADDED SUBROUTINE, CALLED 4 TIMES, CODE SIZE REDUCTION:7 WORDS
-SUBOPT_0x23:
+SUBOPT_0x21:
 	MOVW R26,R28
 	ADIW R26,1
 	ADD  R26,R30
@@ -3359,17 +3220,17 @@ SUBOPT_0x23:
 	RET
 
 ;OPTIMIZER ADDED SUBROUTINE, CALLED 2 TIMES, CODE SIZE REDUCTION:1 WORDS
-SUBOPT_0x24:
+SUBOPT_0x22:
 	__GETD2S 1
 	RET
 
 ;OPTIMIZER ADDED SUBROUTINE, CALLED 2 TIMES, CODE SIZE REDUCTION:1 WORDS
-SUBOPT_0x25:
+SUBOPT_0x23:
 	__PUTD1S 1
 	RET
 
 ;OPTIMIZER ADDED SUBROUTINE, CALLED 2 TIMES, CODE SIZE REDUCTION:2 WORDS
-SUBOPT_0x26:
+SUBOPT_0x24:
 	ST   -Y,R30
 	LDI  R30,LOW(2)
 	ST   -Y,R30
@@ -3378,57 +3239,89 @@ SUBOPT_0x26:
 	RET
 
 ;OPTIMIZER ADDED SUBROUTINE, CALLED 3 TIMES, CODE SIZE REDUCTION:6 WORDS
-SUBOPT_0x27:
+SUBOPT_0x25:
 	LDI  R30,LOW(0)
 	ST   -Y,R30
 	LDI  R26,LOW(0)
 	RCALL _ADE7753_WRITE
 	RJMP SUBOPT_0x3
 
-;OPTIMIZER ADDED SUBROUTINE, CALLED 13 TIMES, CODE SIZE REDUCTION:10 WORDS
-SUBOPT_0x28:
-	LDS  R26,_Uc_led_count
-	RET
-
 ;OPTIMIZER ADDED SUBROUTINE, CALLED 4 TIMES, CODE SIZE REDUCTION:7 WORDS
-SUBOPT_0x29:
+SUBOPT_0x26:
 	LDS  R26,_Uint_data_led1
 	LDS  R27,_Uint_data_led1+1
 	RET
 
-;OPTIMIZER ADDED SUBROUTINE, CALLED 3 TIMES, CODE SIZE REDUCTION:2 WORDS
-SUBOPT_0x2A:
+;OPTIMIZER ADDED SUBROUTINE, CALLED 2 TIMES, CODE SIZE REDUCTION:8 WORDS
+SUBOPT_0x27:
 	LDI  R30,LOW(1000)
 	LDI  R31,HIGH(1000)
 	RCALL __DIVW21U
+	MOV  R18,R30
+	LDI  R31,0
+	SUBI R30,LOW(-_BCDLED)
+	SBCI R31,HIGH(-_BCDLED)
+	LD   R17,Z
+	MOV  R30,R21
+	AND  R30,R17
 	RET
 
-;OPTIMIZER ADDED SUBROUTINE, CALLED 3 TIMES, CODE SIZE REDUCTION:4 WORDS
-SUBOPT_0x2B:
+;OPTIMIZER ADDED SUBROUTINE, CALLED 2 TIMES, CODE SIZE REDUCTION:10 WORDS
+SUBOPT_0x28:
 	LDI  R30,LOW(100)
 	LDI  R31,HIGH(100)
 	RCALL __DIVW21U
 	MOVW R26,R30
-	RET
-
-;OPTIMIZER ADDED SUBROUTINE, CALLED 3 TIMES, CODE SIZE REDUCTION:4 WORDS
-SUBOPT_0x2C:
 	LDI  R30,LOW(10)
 	LDI  R31,HIGH(10)
+	RCALL __MODW21U
+	MOV  R18,R30
+	LDI  R31,0
+	SUBI R30,LOW(-_BCDLED)
+	SBCI R31,HIGH(-_BCDLED)
+	LD   R17,Z
+	RET
+
+;OPTIMIZER ADDED SUBROUTINE, CALLED 6 TIMES, CODE SIZE REDUCTION:3 WORDS
+SUBOPT_0x29:
+	MOV  R30,R21
+	AND  R30,R17
+	RET
+
+;OPTIMIZER ADDED SUBROUTINE, CALLED 6 TIMES, CODE SIZE REDUCTION:3 WORDS
+SUBOPT_0x2A:
+	LDI  R30,LOW(10)
+	LDI  R31,HIGH(10)
+	RET
+
+;OPTIMIZER ADDED SUBROUTINE, CALLED 2 TIMES, CODE SIZE REDUCTION:7 WORDS
+SUBOPT_0x2B:
 	RCALL __DIVW21U
 	MOVW R26,R30
+	RCALL SUBOPT_0x2A
+	RCALL __MODW21U
+	MOV  R18,R30
+	LDI  R31,0
+	SUBI R30,LOW(-_BCDLED)
+	SBCI R31,HIGH(-_BCDLED)
+	LD   R17,Z
 	RET
+
+;OPTIMIZER ADDED SUBROUTINE, CALLED 2 TIMES, CODE SIZE REDUCTION:6 WORDS
+SUBOPT_0x2C:
+	RCALL SUBOPT_0x2A
+	RCALL __MODW21U
+	MOV  R18,R30
+	LDI  R31,0
+	SUBI R30,LOW(-_BCDLED)
+	SBCI R31,HIGH(-_BCDLED)
+	LD   R17,Z
+	RJMP SUBOPT_0x29
 
 ;OPTIMIZER ADDED SUBROUTINE, CALLED 4 TIMES, CODE SIZE REDUCTION:7 WORDS
 SUBOPT_0x2D:
 	LDS  R26,_Uint_data_led2
 	LDS  R27,_Uint_data_led2+1
-	RET
-
-;OPTIMIZER ADDED SUBROUTINE, CALLED 4 TIMES, CODE SIZE REDUCTION:7 WORDS
-SUBOPT_0x2E:
-	LDS  R26,_Uint_data_led3
-	LDS  R27,_Uint_data_led3+1
 	RET
 
 
@@ -3449,6 +3342,18 @@ __ADDD12:
 	ADC  R31,R27
 	ADC  R22,R24
 	ADC  R23,R25
+	RET
+
+__LSLB12:
+	TST  R30
+	MOV  R0,R30
+	MOV  R30,R26
+	BREQ __LSLB12R
+__LSLB12L:
+	LSL  R30
+	DEC  R0
+	BRNE __LSLB12L
+__LSLB12R:
 	RET
 
 __LSLD12:
@@ -3592,6 +3497,10 @@ __CPD21:
 	CPC  R25,R23
 	RET
 
+__SAVELOCR6:
+	ST   -Y,R21
+__SAVELOCR5:
+	ST   -Y,R20
 __SAVELOCR4:
 	ST   -Y,R19
 __SAVELOCR3:
@@ -3601,6 +3510,10 @@ __SAVELOCR2:
 	ST   -Y,R16
 	RET
 
+__LOADLOCR6:
+	LDD  R21,Y+5
+__LOADLOCR5:
+	LDD  R20,Y+4
 __LOADLOCR4:
 	LDD  R19,Y+3
 __LOADLOCR3:

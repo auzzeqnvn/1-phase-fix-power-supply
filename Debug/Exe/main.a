@@ -537,7 +537,7 @@
 ;PCODE: $000000E5 VOL: 0
 ; 0000 0126         {
 ; 0000 0127             /* Ghi nhan gia tri dong dien va dien ap vao buffer */
-; 0000 0128             AI10_Voltage_buff[Uc_Buff_count] = (unsigned int)(ADE7753_READ(1,VRMS)/1034);
+; 0000 0128             AI10_Voltage_buff[Uc_Buff_count] = (unsigned int)(ADE7753_READ(1,VRMS)/1030);
 ;PCODE: $000000E6 VOL: 0
 ;PCODE: $000000E7 VOL: 0
 ;PCODE: $000000E8 VOL: 0

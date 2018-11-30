@@ -41,6 +41,10 @@ Data Stack size         : 128
 #define NUM_FILTER  4
 #define NUM_SAMPLE  20
 
+/* He so dieu chinh su dung de calibration */
+#define CURRENT_RATIO   228
+#define VOLTAGE_RATIO   1030
+
 unsigned int    AI10_Voltage_buff[NUM_SAMPLE];
 unsigned int    AI10_Currrent_buff[NUM_SAMPLE];
 unsigned int    AI10_Temp_buff[NUM_SAMPLE];
@@ -293,8 +297,8 @@ void main(void)
         if(Bit_Zero_flag)
         {
             /* Ghi nhan gia tri dong dien va dien ap vao buffer */
-            AI10_Voltage_buff[Uc_Buff_count] = (unsigned int)(ADE7753_READ(1,VRMS)/1034);
-            AI10_Currrent_buff[Uc_Buff_count] = (unsigned int)(ADE7753_READ(1,IRMS)/228);
+            AI10_Voltage_buff[Uc_Buff_count] = (unsigned int)(ADE7753_READ(1,VRMS)/VOLTAGE_RATIO);
+            AI10_Currrent_buff[Uc_Buff_count] = (unsigned int)(ADE7753_READ(1,IRMS)/CURRENT_RATIO);
 
 
             ADE7753_WRITE(1,RSTSTATUS,0x00,0x00,0x00);

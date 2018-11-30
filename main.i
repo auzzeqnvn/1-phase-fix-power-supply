@@ -226,7 +226,7 @@ while (1)
 if(Bit_Zero_flag)
 {
 
-AI10_Voltage_buff[Uc_Buff_count] = (unsigned int)(ADE7753_READ(1,0x17,3)/1034);
+AI10_Voltage_buff[Uc_Buff_count] = (unsigned int)(ADE7753_READ(1,0x17,3)/1030);
 AI10_Currrent_buff[Uc_Buff_count] = (unsigned int)(ADE7753_READ(1,0x16,3)/228);
 
 ADE7753_WRITE(1,0x0C,2,0x00,0x00,0x00);
